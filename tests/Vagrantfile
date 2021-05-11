@@ -1,0 +1,145 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+NMONS = 3
+NOSDS = 3
+NMDSS = 1
+NRGWS = 1
+NNFSS = 1
+MGRS  = 1
+LABEL_PREFIX = ''
+MEMORY = 1024
+
+PUBLIC_SUBNET = '192.168.9'
+CLUSTER_SUBNET = '192.168.10'
+
+ansible_provision = proc do |ansible|
+    ansible.playbook = '../cephadm-preflight.yml'
+    ansible.groups = {
+      'mons'             => (0..NMONS - 1).map { |j| "#{LABEL_PREFIX}mon#{j}" },
+      'osds'             => (0..NOSDS - 1).map { |j| "#{LABEL_PREFIX}osd#{j}" },
+      'mdss'             => (0..NMDSS - 1).map { |j| "#{LABEL_PREFIX}mds#{j}" },
+      'rgws'             => (0..NRGWS - 1).map { |j| "#{LABEL_PREFIX}rgw#{j}" },
+      'nfss'             => (0..NNFSS - 1).map { |j| "#{LABEL_PREFIX}nfs#{j}" },
+      'mgrs'             => (0..MGRS - 1).map { |j| "#{LABEL_PREFIX}mgr#{j}" },
+    }
+    ansible.limit = 'all'
+    ansible.verbose = '-vv'
+    ansible.extra_vars = {
+      ceph_origin: "community",
+    }
+end
+
+Vagrant.configure('2') do |config|
+  config.vm.box = 'centos/8'
+#  config.vm.provision :shell, inline: "dnf install -y podman python3 vim; sudo curl --silent --remote-name --location https://github.com/ceph/ceph/raw/octopus/src/cephadm/cephadm; sudo chmod +x cephadm; sudo mkdir -p /etc/ceph"
+  config.ssh.insert_key = false # workaround for https://github.com/mitchellh/vagrant/issues/5048
+#  config.ssh.private_key_path = settings['ssh_private_key_path']
+  config.ssh.username = 'vagrant'
+  config.vm.provider :libvirt do |lv|
+    lv.cpu_mode = 'host-passthrough'
+    lv.volume_cache = 'unsafe'
+    lv.graphics_type = 'none'
+    lv.cpus = 4
+  end
+
+$last_ip_pub_digit   = 9
+$last_ip_cluster_digit = 9
+
+config.vm.provider :libvirt do |v,override|
+  override.vm.synced_folder '.', '/vagrant', disabled: true
+end
+
+
+  (0..NMONS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}mon#{i}" do |mon|
+      mon.vm.hostname = "#{LABEL_PREFIX}mon#{i}"
+      mon.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+
+      # Libvirt
+      mon.vm.provider :libvirt do |lv|
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+    end
+  end
+
+  (0..MGRS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}mgr#{i}" do |mgr|
+      mgr.vm.hostname = "#{LABEL_PREFIX}mgr#{i}"
+      mgr.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+
+      # Libvirt
+      mgr.vm.provider :libvirt do |lv|
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+    end
+  end
+
+  (0..NRGWS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}rgw#{i}" do |rgw|
+      rgw.vm.hostname = "#{LABEL_PREFIX}rgw#{i}"
+      rgw.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+
+      # Libvirt
+      rgw.vm.provider :libvirt do |lv|
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+    end
+  end
+
+  (0..NNFSS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}nfs#{i}" do |nfs|
+      nfs.vm.hostname = "#{LABEL_PREFIX}nfs#{i}"
+      nfs.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+
+      # Libvirt
+      nfs.vm.provider :libvirt do |lv|
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+    end
+  end
+
+  (0..NMDSS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}mds#{i}" do |mds|
+      mds.vm.hostname = "#{LABEL_PREFIX}mds#{i}"
+      mds.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+      # Libvirt
+      mds.vm.provider :libvirt do |lv|
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+    end
+  end
+
+  (0..NOSDS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}osd#{i}" do |osd|
+      osd.vm.hostname = "#{LABEL_PREFIX}osd#{i}"
+      osd.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+      osd.vm.network :private_network,
+        ip: "#{CLUSTER_SUBNET}.#{$last_ip_cluster_digit+=1}"
+
+      # Libvirt
+      driverletters = ('a'..'z').to_a
+      osd.vm.provider :libvirt do |lv|
+        # always make /dev/sd{a/b/c} so that CI can ensure that
+        # virtualbox and libvirt will have the same devices to use for OSDs
+        (0..2).each do |d|
+          lv.storage :file, :device => "hd#{driverletters[d]}", :size => '50G', :bus => "ide"
+        end
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+      osd.vm.provision 'ansible', &ansible_provision if i == (NOSDS - 1)
+    end
+  end
+end
