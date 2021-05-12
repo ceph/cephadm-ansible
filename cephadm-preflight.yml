@@ -1,0 +1,89 @@
+---
+# This playbook configures the Ceph repository.
+# It also installs some prerequisites (podman, lvm2, chronyd, cephadm, ...)
+#
+# Usage:
+#
+# ansible-playbook -i <inventory host file> cephadm-preflight.yml
+#
+# You can limit the execution to a set of hosts by using `--limit` option:
+#
+# ansible-playbook -i <inventory host file> cephadm-preflight.yml --limit <my_osd_group|my_node_name>
+#
+# You can override variables using `--extra-vars` parameter:
+#
+# ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
+#
+
+
+- hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    ceph_origin: community
+    ceph_rhcs_version: 5
+    ceph_mirror: https://download.ceph.com
+    ceph_stable_key: https://download.ceph.com/keys/release.asc
+    ceph_release: pacific
+    upgrade_ceph_packages: false
+    ceph_pkgs:
+      - lvm2
+      - chrony
+      - cephadm
+      - podman
+      - python3
+  tasks:
+    - name: rhcs related tasks
+      when: ceph_origin == 'rhcs'
+      block:
+        - name: enable red hat storage tools repository
+          rhsm_repository:
+            name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms"
+
+    - name: enable repo from download.ceph.com
+      when: ceph_origin == 'community'
+      block:
+        - name: configure red hat ceph community repository stable key
+          rpm_key:
+            key: "{{ ceph_stable_key }}"
+            state: present
+          register: result
+          until: result is succeeded
+
+        - name: configure red hat ceph stable community repository
+          yum_repository:
+            name: ceph_stable
+            description: Ceph Stable $basearch repo
+            gpgcheck: yes
+            state: present
+            gpgkey: "{{ ceph_stable_key }}"
+            baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/$basearch"
+            file: ceph_stable
+            priority: '2'
+          register: result
+          until: result is succeeded
+
+        - name: configure red hat ceph stable noarch community repository
+          yum_repository:
+            name: ceph_stable_noarch
+            description: Ceph Stable noarch repo
+            gpgcheck: yes
+            state: present
+            gpgkey: "{{ ceph_stable_key }}"
+            baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/noarch"
+            file: ceph_stable
+            priority: '2'
+          register: result
+          until: result is succeeded
+
+    - name: install prerequisites packages
+      package:
+        name: "{{ ceph_pkgs | unique }}"
+        state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
+      register: result
+      until: result is succeeded
+
+    - name: ensure chronyd is running
+      service:
+        name: chronyd
+        state: started
