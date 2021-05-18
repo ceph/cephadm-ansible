@@ -19,20 +19,10 @@
 - hosts: all
   become: true
   gather_facts: true
-  vars:
-    ceph_origin: community
-    ceph_rhcs_version: 5
-    ceph_mirror: https://download.ceph.com
-    ceph_stable_key: https://download.ceph.com/keys/release.asc
-    ceph_release: pacific
-    upgrade_ceph_packages: false
-    ceph_pkgs:
-      - lvm2
-      - chrony
-      - cephadm
-      - podman
-      - python3
   tasks:
+    - import_role:
+        name: ceph-defaults
+
     - name: rhcs related tasks
       when: ceph_origin == 'rhcs'
       block:
