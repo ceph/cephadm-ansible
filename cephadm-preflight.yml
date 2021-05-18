@@ -1,4 +1,7 @@
 ---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+#
 # This playbook configures the Ceph repository.
 # It also installs some prerequisites (podman, lvm2, chronyd, cephadm, ...)
 #
