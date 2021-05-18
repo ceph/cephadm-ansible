@@ -1,0 +1,56 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+#
+# This playbook purges a Ceph cluster managed with cephadm
+#
+# You must define a group [admin] in your inventory with a node where
+# the admin keyring is present at /etc/ceph/ceph.client.admin.keyring
+#
+# Usage:
+#
+# ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+
+- name: confirm whether user really meant to upgrade the cluster
+  hosts: localhost
+  become: false
+  tasks:
+    - name: fail if fsid was not provided
+      fail:
+        msg: >
+          You must provide the cluster fsid to be purged.
+          ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+      when: fsid is undefined
+
+    - name: fail if admin group doesn't exist or is empty
+      fail:
+        msg: >
+          You must define a group [admin] in your inventory and add a node where
+          admin keyring is present at /etc/ceph/admin.client.keyring
+      when: "'admin' not in groups or groups['admin'] | length < 1"
+
+- name: make sure admin keyring is present and pause cephadm
+  hosts: "admin[0]"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: check /etc/ceph/admin.client.keyring
+      stat:
+        path: /etc/ceph/ceph.client.admin.keyring
+      register: admin_keyring_stat
+
+    - name: fail if /etc/ceph/admin.client.keyring is not present
+      fail:
+        msg: >
+          You must have /etc/ceph/ceph.client.admin.keyring on this node ({{ inventory_hostname }})
+      when: not admin_keyring_stat.stat.exists | bool
+
+    - name: pause cephadm
+      command: "cephadm shell -- ceph orch pause"
+
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: purge ceph cluster
+      command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
