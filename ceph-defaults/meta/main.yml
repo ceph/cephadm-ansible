@@ -1,0 +1,17 @@
+---
+galaxy_info:
+  company: Red Hat
+  author: Guillaume Abrioux
+  description: Handles ceph-ansible default vars for all roles
+  license: Apache
+  min_ansible_version: 2.10
+  platforms:
+    - name: Ubuntu
+      versions:
+        - bionic
+    - name: EL
+      versions:
+        - 
+  galaxy_tags:
+    - system
+dependencies: []
