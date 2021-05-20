@@ -1,0 +1,133 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+#
+# This playbook bootstraps an initial Ceph cluster
+#
+# You must define a group [admin] in your inventory that will contain
+# the node where the initial bootstrap will be performed
+#
+# Usage:
+#
+# ansible-playbook -i <inventory host file> cephadm-bootstrap.yml --extra-vars "variable=value"
+#
+# with following variables that can be overidden:
+#
+# monitor_address:                     ip address of the monitor (string)
+# fsid:                                set the fsid (string)
+# dashboard_enabled:                   enable or disable the Ceph dashboard (true|false)
+# monitoring_enabled:                  enable or disable the monitoring stack (true|false)
+# ceph_container_registry:             container registry (string)
+# ceph_container_image:                container image (string)
+# ceph_container_image_tag:            container image tag (string)
+# ceph_container_registry_auth:        whether the playbook will authenticate to the registry (true|false)
+# ceph_container_registry_username:    registry username (string)
+# ceph_container_registry_password:    registry password (string)
+# node_exporter_container_image:       node exporter container image (string)
+# prometheus_container_image:          prometheus container image (string)
+# alertmanager_container_image:        alertmanager container image (string)
+# grafana_container_image:             grafana container image (string)
+# ceph_container_no_proxy:             a list of host to pass to environment variable NO_PROXY (string)
+# configure_firewall:                  do not configure firewalld (true|false)
+
+- name: gather facts and prepare system for cephadm
+  hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph-defaults
+
+    - name: gather and delegate facts
+      setup:
+        gather_subset:
+          - 'all'
+          - '!facter'
+          - '!ohai'
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      with_items: "{{ groups['all'] | difference(groups.get('clients', [])) }}"
+      run_once: true
+      when: delegate_facts_host | bool
+
+    - name: check if podman binary is present
+      stat:
+        path: /usr/bin/podman
+      register: podman_binary
+
+    - name: set_fact container_binary
+      set_fact:
+        container_binary: "{{ 'podman' if podman_binary.stat.exists | bool else 'docker' }}"
+
+    - name: check if it is atomic host
+      stat:
+        path: /run/ostree-booted
+      register: stat_ostree
+
+    - name: container registry authentication
+      command: '{{ container_binary }} login -u {{ ceph_container_registry_username }} --password-stdin {{ ceph_container_registry }}'
+      args:
+        stdin: '{{ ceph_container_registry_password }}'
+        stdin_add_newline: no
+      changed_when: false
+      environment:
+        HTTP_PROXY: "{{ ceph_container_http_proxy | default('') }}"
+        HTTPS_PROXY: "{{ ceph_container_https_proxy | default('') }}"
+        NO_PROXY: "{{ ceph_container_no_proxy }}"
+      when: ceph_container_registry_auth | default(False) | bool
+
+    - name: set_fact cephadm_cmd
+      set_fact:
+        cephadm_cmd: "cephadm {{ '--docker' if container_binary == 'docker' else '' }}"
+
+- name: bootstrap the cluster
+  hosts: "admin[0]"
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph-defaults
+
+    - name: create /etc/ceph directory
+      file:
+        path: /etc/ceph
+        state: directory
+
+    - name: bootstrap initial cluster
+      command: "cephadm --image {{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }} bootstrap {{ '--mon-ip ' + monitor_address if monitor_address is defined else '' }} --skip-pull {{ '--skip-dashboard' if dashboard_enabled | bool else '' }} {{ '--skip-monitoring-stack' if monitoring_enabled | bool else '' }} {{ '--fsid ' + fsid if fsid is defined else '' }}"
+
+    - name: set default container image in ceph configuration
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set global container_image {{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
+
+    - name: set container image base in ceph configuration
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_base {{ ceph_container_registry }}/{{ ceph_container_image }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
+
+    - name: set alertmanager container image in ceph configuration
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_alertmanager {{ alertmanager_container_image }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
+
+    - name: set grafana container image in ceph configuration
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_grafana {{ grafana_container_image }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
+
+    - name: set node-exporter container image in ceph configuration
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_node_exporter {{ node_exporter_container_image }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
+
+    - name: set prometheus container image in ceph configuration
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_prometheus {{ prometheus_container_image }}"
+      changed_when: false
+      environment:
+        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
