@@ -10,3 +10,6 @@ mon0
 osd0
 osd1
 osd2
+
+[admin]
+mon0
