@@ -31,4 +31,17 @@ You can override variables using `--extra-vars` parameter:
 ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
 ```
 
+# Purge
+
+This playbook purges a Ceph cluster managed with cephadm
+
+You must define a group `[admin]` in your inventory with a node where
+the admin keyring is present at `/etc/ceph/ceph.client.admin.keyring`
+
+## Usage:
+
+```
+ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+```
+
 [cephadm]: https://docs.ceph.com/en/latest/cephadm/
