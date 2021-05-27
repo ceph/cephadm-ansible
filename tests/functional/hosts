@@ -13,3 +13,7 @@ osd2
 
 [admin]
 mon0
+
+[clients]
+client0
+client1

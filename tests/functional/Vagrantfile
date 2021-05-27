@@ -7,6 +7,7 @@ NMDSS = 0
 NRGWS = 0
 NNFSS = 0
 MGRS  = 0
+NCLIENTS = 2
 LABEL_PREFIX = ''
 MEMORY = 1024
 
@@ -22,6 +23,7 @@ ansible_provision = proc do |ansible|
       'mdss'             => (0..NMDSS - 1).map { |j| "#{LABEL_PREFIX}mds#{j}" },
       'rgws'             => (0..NRGWS - 1).map { |j| "#{LABEL_PREFIX}rgw#{j}" },
       'nfss'             => (0..NNFSS - 1).map { |j| "#{LABEL_PREFIX}nfs#{j}" },
+      'clients'          => (0..NCLIENTS - 1).map { |j| "#{LABEL_PREFIX}client#{j}" },
       'mgrs'             => (0..MGRS - 1).map { |j| "#{LABEL_PREFIX}mgr#{j}" },
     }
     ansible.limit = 'all'
@@ -54,6 +56,20 @@ end
   (0..NMONS - 1).each do |i|
     config.vm.define "#{LABEL_PREFIX}mon#{i}" do |mon|
       mon.vm.hostname = "#{LABEL_PREFIX}mon#{i}"
+      mon.vm.network :private_network,
+        ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
+
+      # Libvirt
+      mon.vm.provider :libvirt do |lv|
+        lv.memory = MEMORY
+        lv.random_hostname = true
+      end
+    end
+  end
+
+  (0..NCLIENTS - 1).each do |i|
+    config.vm.define "#{LABEL_PREFIX}client#{i}" do |mon|
+      mon.vm.hostname = "#{LABEL_PREFIX}client#{i}"
       mon.vm.network :private_network,
         ip: "#{PUBLIC_SUBNET}.#{$last_ip_pub_digit+=1}"
 
