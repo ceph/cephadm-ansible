@@ -31,6 +31,15 @@ You can override variables using `--extra-vars` parameter:
 ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
 ```
 
+## Enabling the `ceph` CLI
+
+It is recommended to also install the ceph-common package in order to access the 
+`ceph` binary.
+
+```
+ansible-playbook -i hosts -v cephadm-preflight.yml -e "ceph_pkgs=ceph-common"
+```
+
 # Purge
 
 This playbook purges a Ceph cluster managed with cephadm
