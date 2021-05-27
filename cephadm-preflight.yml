@@ -108,6 +108,14 @@
             - ceph_stable
             - ceph_stable_noarch
 
+    - name: install epel-release
+      package:
+        name: epel-release
+        state: present
+      register: result
+      until: result is succeeded
+      when: ansible_facts['distribution'] == 'CentOS'
+
 
     - name: install prerequisites packages
       package:
