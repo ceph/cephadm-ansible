@@ -152,7 +152,7 @@
         CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: manage nodes with cephadm
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host add {{ ansible_facts['hostname'] }} {{ ansible_facts['default_ipv4']['address'] }} {{ group_names | join(' ') }} {{ '_admin' if inventory_hostname == 'mon0' else '' }}"
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host add {{ ansible_facts['hostname'] }} {{ ansible_facts['default_ipv4']['address'] }} {{ group_names | join(' ') }} {{ '_admin' if inventory_hostname == 'ceph-node0' else '' }}"
       changed_when: false
       delegate_to: '{{ groups[mon_group_name][0] }}'
       environment:
