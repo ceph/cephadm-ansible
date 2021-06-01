@@ -54,3 +54,4 @@
   tasks:
     - name: purge ceph cluster
       command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
+      when: group_names != ['clients']

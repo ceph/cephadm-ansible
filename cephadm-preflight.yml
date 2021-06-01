@@ -17,7 +17,20 @@
 #
 # ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
 #
-
+# If you plan to deploy 'client' nodes, you must add a group called 'clients' in your inventory:
+#
+# $ cat hosts
+# mynode1
+# mynode2
+# mynode3
+#
+# [clients]
+# client1
+# client2
+# client3
+#
+# Then, you can run the the same way as shown above. The playbook will automatically install
+# chronyd and ceph-common on those nodes.
 
 - hosts: all
   become: true
@@ -95,10 +108,18 @@
             - ceph_stable
             - ceph_stable_noarch
 
+    - name: install epel-release
+      package:
+        name: epel-release
+        state: present
+      register: result
+      until: result is succeeded
+      when: ansible_facts['distribution'] == 'CentOS'
+
 
     - name: install prerequisites packages
       package:
-        name: "{{ ceph_pkgs | unique }}"
+        name: "{{ ['chrony', 'ceph-common'] if group_names == ['clients'] else ceph_pkgs | unique }}"
         state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
       register: result
       until: result is succeeded
@@ -107,3 +128,4 @@
       service:
         name: chronyd
         state: started
+        enabled: yes

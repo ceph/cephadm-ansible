@@ -31,6 +31,25 @@ You can override variables using `--extra-vars` parameter:
 ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
 ```
 
+If you plan to deploy client nodes, you must define a group called "clients" in your inventory:
+
+eg:
+
+```
+$ cat hosts
+node1
+node2
+node3
+
+[clients]
+client1
+client2
+client3
+node123
+```
+
+Then you can run the playbook as shown above.
+
 # Purge
 
 This playbook purges a Ceph cluster managed with cephadm

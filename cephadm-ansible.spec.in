@@ -11,8 +11,8 @@ Source0:        %{name}-%{version}-%{shortcommit}.tar.gz
 
 BuildArch:      noarch
 
-BuildRequires: ansible >= 2.10
-Requires: ansible >= 2.10
+BuildRequires: ansible >= 2.9
+Requires: ansible >= 2.9
 
 %description
 cephadm-ansible is a collection of Ansible playbooks to simplify workflows that are not covered by cephadm.
