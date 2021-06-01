@@ -25,13 +25,13 @@ cephadm-ansible is a collection of Ansible playbooks to simplify workflows that 
 %install
 mkdir -p %{buildroot}%{_datarootdir}/cephadm-ansible
 
-for f in ansible.cfg *.yml; do
+for f in ansible.cfg *.yml ceph-defaults; do
   cp -a $f %{buildroot}%{_datarootdir}/cephadm-ansible
 done
 
 %check
-# Borrowed from upstream's .travis.yml:
-ansible-playbook -i dummy-ansible-hosts test.yml --syntax-check
+ansible-playbook -i tests/functional/hosts cephadm-preflight.yml --syntax-check
+ansible-playbook -i tests/functional/hosts cephadm-purge-cluster.yml --syntax-check
 
 %files
 %doc README.md
