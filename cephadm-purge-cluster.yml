@@ -52,6 +52,9 @@
   become: true
   gather_facts: false
   tasks:
+    - import_role:
+        name: ceph-defaults
+
     - name: purge ceph cluster
-      command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
+      command: "cephadm rm-cluster --force {{ '--zap-osds' if ceph_origin == 'rhcs' or ceph_origin == 'shaman' else '' }} --fsid {{ fsid }}"
       when: group_names != ['clients']
