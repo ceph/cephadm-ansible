@@ -66,6 +66,8 @@
   hosts: "{{ mon_group_name }}[0]"
   become: true
   gather_facts: false
+  environment:
+    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph-defaults
@@ -76,43 +78,31 @@
         state: directory
 
     - name: bootstrap initial cluster
-      command: "{{ cephadm_cmd }} --image {{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }} bootstrap --mon-ip {{ monitor_address }} --skip-pull --skip-dashboard --skip-monitoring-stack {{ '--fsid ' + fsid if fsid is defined else '' }}"
+      command: "{{ cephadm_cmd }} bootstrap --mon-ip {{ monitor_address }} --skip-pull --skip-dashboard --skip-monitoring-stack {{ '--fsid ' + fsid if fsid is defined else '' }}"
 
     - name: set default container image in ceph configuration
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set global container_image {{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: set container image base in ceph configuration
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_base {{ ceph_container_registry }}/{{ ceph_container_image }}"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: set alertmanager container image in ceph configuration
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_alertmanager {{ alertmanager_container_image }}"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: set grafana container image in ceph configuration
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_grafana {{ grafana_container_image }}"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: set node-exporter container image in ceph configuration
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_node_exporter {{ node_exporter_container_image }}"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: set prometheus container image in ceph configuration
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_prometheus {{ prometheus_container_image }}"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
 - name: add the other nodes
   hosts:
@@ -127,6 +117,8 @@
     - "{{ monitoring_group_name }}"
   become: true
   gather_facts: false
+  environment:
+    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph-defaults
@@ -137,8 +129,6 @@
       run_once: true
       register: cephadm_pubpkey
       delegate_to: '{{ groups[mon_group_name][0] }}'
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: allow cephadm key for root account
       authorized_key:
@@ -148,15 +138,11 @@
     - name: run cephadm prepare-host
       command: cephadm prepare-host
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: manage nodes with cephadm
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host add {{ ansible_facts['hostname'] }} {{ ansible_facts['default_ipv4']['address'] }} {{ group_names | join(' ') }} {{ '_admin' if inventory_hostname == 'ceph-node0' else '' }}"
       changed_when: false
       delegate_to: '{{ groups[mon_group_name][0] }}'
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: add ceph label for core component
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host label add {{ ansible_facts['hostname'] }} ceph"
@@ -168,13 +154,13 @@
             inventory_hostname in groups.get(rgw_group_name, []) or
             inventory_hostname in groups.get(mgr_group_name, []) or
             inventory_hostname in groups.get(rbdmirror_group_name, [])
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
 - name: adjust service placement
   hosts: "{{ mon_group_name }}[0]"
   become: true
   gather_facts: false
+  environment:
+    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph-defaults
@@ -182,8 +168,6 @@
     - name: update the placement of monitor hosts
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mon --placement='label:{{ mon_group_name }}'"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: waiting for the monitor to join the quorum...
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} quorum_status --format json"
@@ -192,31 +176,25 @@
       until: (ceph_health_raw.stdout | from_json)["quorum_names"] | length == groups.get(mon_group_name, []) | length
       retries: "{{ health_mon_check_retries }}"
       delay: "{{ health_mon_check_delay }}"
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: update the placement of manager hosts
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mgr --placement='label:{{ mgr_group_name }}'"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: update the placement of osd hosts
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply osd --all-available-devices"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: update the placement of crash hosts
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply crash --placement='label:ceph'"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
 - name: adjust monitoring service placement
   hosts: "{{ monitoring_group_name }}"
   become: true
   gather_facts: false
+  environment:
+    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph-defaults
@@ -228,37 +206,29 @@
         - name: enable the prometheus module
           command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} mgr module enable prometheus"
           changed_when: false
-          environment:
-            CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
         - name: update the placement of alertmanager hosts
           command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply alertmanager --placement='label:{{ monitoring_group_name }}'"
           changed_when: false
-          environment:
-            CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
         - name: update the placement of grafana hosts
           command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply grafana --placement='label:{{ monitoring_group_name }}'"
           changed_when: false
-          environment:
-            CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
         - name: update the placement of prometheus hosts
           command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply prometheus --placement='label:{{ monitoring_group_name }}'"
           changed_when: false
-          environment:
-            CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
         - name: update the placement of node-exporter hosts
           command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply node-exporter --placement='*'"
           changed_when: false
-          environment:
-            CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
 - name: print information
   hosts: "{{ mon_group_name }}[0]"
   become: true
   gather_facts: false
+  environment:
+    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph-defaults
@@ -266,12 +236,7 @@
     - name: show ceph orchestrator services
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
 
     - name: show ceph orchestrator daemons
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ps --refresh"
       changed_when: false
-      environment:
-        CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
-
