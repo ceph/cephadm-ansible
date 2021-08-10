@@ -46,7 +46,7 @@
       when: not admin_keyring_stat.stat.exists | bool
 
     - name: pause cephadm
-      command: "cephadm shell -- ceph orch pause"
+      command: "cephadm shell --fsid {{ fsid }} -- ceph orch pause"
 
 - hosts: all
   become: true
