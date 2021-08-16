@@ -1,0 +1,172 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+#
+# Distribute keyring and conf files to a set of clients
+#
+# Uses ceph-defaults
+#  - local_client_dir: determines the dir name for the config files on the ansible host
+#  - ceph_client_pkgs: list of pre-req packages that must be on the client
+#
+# Required run-time variables
+# ------------------
+# keyring : full path name of the keyring file on the admin[0] host which holds the key for the client to use
+# client_group : ansible group name for the clients to set up
+# fsid : fsid of the cluster to extract the keyring and conf from
+#
+# Optional run-time variables
+# ------------------
+# conf : full path name of the conf file on the admin[0] host to use (undefined will trigger a minimal conf)
+#
+# Example
+# -------
+# ansible-playbook -i hosts cephadm-clients.yml -e fsid=BLA -e client_group=fs_clients -e keyring=/etc/ceph/fs.keyring
+#
+
+
+- name: Confirm local readiness
+  hosts: localhost
+  gather_facts: false
+  tasks:
+
+    - import_role:
+        name: ceph-defaults
+
+    - name: fail if the fsid parameter is missing
+      fail:
+        msg: >
+          You must supply an 'fsid' parameter for the corresponding ceph cluster
+      when: fsid is undefined
+
+    - name: fail if admin group doesn't exist or is empty
+      fail:
+        msg: |
+          You must define a group [admin] in your inventory which provides the
+          keyring that you want to distribute
+      when: "'admin' not in groups or groups['admin'] | length < 1"
+
+    - name: fail if client_group is empty or undefined
+      fail:
+        msg: >
+          You must supply a client_group name
+      when: client_group is undefined
+
+    - name: fail if client_group is NOT in the inventory
+      fail:
+        msg: >
+          Variable client_group '{{ client_group }}' is not defined in the inventory
+      when: client_group not in groups
+
+    - name: fail if keyring variable is missing
+      fail:
+        msg: |
+          You must supply a 'keyring' variable that defines the path to the key
+          that you want to distribute to your client machines
+      when: keyring is not defined
+
+
+- name: Confirm admin host is ready
+  hosts: admin[0]
+  become: yes
+  gather_facts: false
+  tasks:
+
+    - name: check fsid is present on {{ inventory_hostname }}
+      stat:
+        path: /var/lib/ceph/{{ fsid }}
+      register: fsid_stat
+
+    - name: fail if fsid is not present
+      fail:
+        msg: >
+          The given fsid ({{ fsid }}), is not present in /var/lib/ceph on {{ inventory_hostname }}
+      when:
+        - not fsid_stat.stat.exists | bool
+        - not fsid_stat.stat.isdir | bool
+
+    - name: check keyring status on {{ inventory_hostname }}
+      stat:
+        path: "{{ keyring }}"
+      register: keyring_stat
+
+    - name: fail if keyring not found on {{ inventory_hostname }}
+      fail:
+        msg: >
+          The keyring path provided '{{ keyring }}' can not be found on {{ inventory_hostname }}
+      when: not keyring_stat.stat.exists | bool
+
+    - name: check conf is OK to use
+      stat:
+        path: "{{ conf }}"
+      register: conf_stat
+      when: conf is defined
+
+    - name: fail if conf supplied is not on {{ inventory_hostname }}
+      fail:
+        msg: |
+          The conf file '{{ conf }}' can not be found on {{ inventory_hostname }}
+      when:
+        - conf is defined
+        - not conf_stat.stat.exists | bool
+        - not conf_stat.stat.isreg | bool
+
+
+- name: Assemble client payload
+  hosts: admin[0]
+  become: yes
+  gather_facts: false
+  tasks:
+
+    - import_role:
+        name: ceph-defaults
+
+    - name: slurp the keyring
+      slurp:
+        src: "{{ keyring }}"
+      register: client_keyring
+      no_log: true
+
+    - name: slurp the conf if it's supplied
+      slurp:
+        src: "{{ conf }}"
+      register: ceph_config
+      when:
+        - conf is defined
+        - conf | length > 0
+
+    - name: create minimal conf as a default
+      command: cephadm shell -- ceph config generate-minimal-conf
+      register: minimal_ceph_config
+      when: conf is undefined
+
+
+- name: Distribute client configuration
+  hosts: "{{ client_group }}"
+  become: yes
+  gather_facts: false
+  tasks:
+
+    - import_role:
+        name: ceph-defaults
+
+    - name: install ceph client prerequisites if needed
+      package:
+        name: "{{ ceph_client_pkgs }}"
+        state: present
+      register: result
+      until: result is succeeded
+
+    - name: copy configuration and keyring files to the clients
+      copy:
+        content: "{{ item.content }}"
+        dest: "{{ item.dest }}"
+        owner: ceph
+        group: ceph
+        mode: '0600'
+        backup: yes
+      loop:
+        - { content: "{{ hostvars[groups['admin'][0]]['client_keyring']['content'] | b64decode }}", dest: '/etc/ceph/ceph.keyring', copy_file: True }
+        - { content: "{{ hostvars[groups['admin'][0]]['minimal_ceph_config']['stdout'] }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ conf is undefined }}" }
+        - { content: "{{ hostvars[groups['admin'][0]]['ceph_config']['content'] | default('') | b64decode }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ hostvars[groups['admin'][0]]['ceph_config']['skipped'] is undefined }}" }
+      when: item.copy_file | bool
+      no_log: true

@@ -13,6 +13,9 @@ ceph_pkgs:
   - cephadm
   - podman
   - ceph-common
+ceph_client_pkgs:
+  - chrony
+  - ceph-common
 # Bootstrap variables
 cluster: ceph
 mon_group_name: mons
