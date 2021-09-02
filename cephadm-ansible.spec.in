@@ -31,7 +31,7 @@ done
 
 %check
 ansible-playbook -i tests/functional/hosts cephadm-preflight.yml --syntax-check
-ansible-playbook -i tests/functional/hosts cephadm-purge-cluster.yml --syntax-check
+ansible-playbook -i tests/functional/hosts cephadm-purge-cluster.yml -e fsid=%(uuidgen) --syntax-check
 
 %files
 %doc README.md
