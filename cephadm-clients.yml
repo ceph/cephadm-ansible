@@ -166,7 +166,7 @@
         backup: yes
       loop:
         - { content: "{{ hostvars[groups['admin'][0]]['client_keyring']['content'] | b64decode }}", dest: '/etc/ceph/ceph.keyring', copy_file: True }
-        - { content: "{{ hostvars[groups['admin'][0]]['minimal_ceph_config']['stdout'] }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ conf is undefined }}" }
+        - { content: "{{ hostvars[groups['admin'][0]]['minimal_ceph_config']['stdout'] | default('') }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ conf is undefined }}" }
         - { content: "{{ hostvars[groups['admin'][0]]['ceph_config']['content'] | default('') | b64decode }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ hostvars[groups['admin'][0]]['ceph_config']['skipped'] is undefined }}" }
       when: item.copy_file | bool
       no_log: true
