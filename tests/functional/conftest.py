@@ -7,3 +7,5 @@ def node(host, request):
     if request.node.get_closest_marker("no_client") and ansible_vars['group_names'] == ['clients']:
         pytest.skip("Not a valid test for client nodes")
 
+    if request.node.get_closest_marker("client") and 'clients' not in ansible_vars['group_names']:
+        pytest.skip("Not a valid test for non client nodes")
