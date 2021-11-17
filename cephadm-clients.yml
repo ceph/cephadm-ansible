@@ -11,12 +11,12 @@
 # Required run-time variables
 # ------------------
 # keyring : full path name of the keyring file on the admin[0] host which holds the key for the client to use
-# client_group : ansible group name for the clients to set up
 # fsid : fsid of the cluster to extract the keyring and conf from
 #
 # Optional run-time variables
 # ------------------
 # conf : full path name of the conf file on the admin[0] host to use (undefined will trigger a minimal conf)
+# client_group : ansible group name for the clients to set up
 #
 # Example
 # -------
@@ -44,12 +44,6 @@
           You must define a group [admin] in your inventory which provides the
           keyring that you want to distribute
       when: "'admin' not in groups or groups['admin'] | length < 1"
-
-    - name: fail if client_group is empty or undefined
-      fail:
-        msg: >
-          You must supply a client_group name
-      when: client_group is undefined
 
     - name: fail if client_group is NOT in the inventory
       fail:
