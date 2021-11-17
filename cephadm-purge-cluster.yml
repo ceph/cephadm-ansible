@@ -59,12 +59,15 @@
   any_errors_fatal: true
   tasks:
 
+    - import_role:
+        name: ceph-defaults
+
     - name: check cephadm binary is available
       command: which cephadm
       register: cephadm_exists
       changed_when: false
       failed_when: false
-      when: group_names != ['clients']
+      when: group_names != [client_group]
 
     - name: fail if cephadm is not available
       fail:
@@ -72,14 +75,14 @@
           The cephadm binary is missing on {{ inventory_hostname }}. To purge the cluster you must have cephadm installed
           on ALL ceph hosts. Install manually or use the preflight playbook.
       when:
-        - group_names != ['clients']
+        - group_names != [client_group]
         - cephadm_exists.rc
 
     - name: check fsid directory given is valid across the cluster
       stat:
         path: /var/lib/ceph/{{ fsid }}
       register: fsid_exists
-      when: group_names != ['clients']
+      when: group_names != [client_group]
 
     - name: fail if the fsid directory is missing
       fail:
@@ -87,7 +90,7 @@
           The fsid directory '/var/lib/ceph/{{ fsid }}' can not be found on {{ inventory_hostname }}
           Is the fsid correct?
       when:
-        - group_names != ['clients']
+        - group_names != [client_group]
         - not fsid_exists.stat.exists | bool
 
 
@@ -134,4 +137,4 @@
 
     - name: purge ceph daemons
       command: "cephadm rm-cluster --force {{ '--zap-osds' if ceph_origin == 'rhcs' or ceph_origin == 'shaman' else '' }} --fsid {{ fsid }}"
-      when: group_names != ['clients']
+      when: group_names != [client_group]

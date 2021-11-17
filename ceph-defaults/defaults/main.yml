@@ -16,6 +16,7 @@ ceph_pkgs:
 ceph_client_pkgs:
   - chrony
   - ceph-common
+client_group: clients
 # Bootstrap variables
 cluster: ceph
 mon_group_name: mons
