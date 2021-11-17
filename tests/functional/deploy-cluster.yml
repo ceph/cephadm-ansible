@@ -1,15 +1,15 @@
 ---
+- name: load variables
+  hosts: all
+  become: false
+  tasks:
+    - include_vars: deploy-cluster-vars.yml
+
 - name: gather facts and prepare system for cephadm
   hosts:
-    - "{{ mon_group_name }}"
-    - "{{ osd_group_name }}"
-    - "{{ mds_group_name }}"
-    - "{{ rgw_group_name }}"
-    - "{{ mgr_group_name }}"
-    - "{{ rbdmirror_group_name }}"
-    - "{{ nfs_group_name }}"
-    - "{{ iscsi_gw_group_name }}"
-    - "{{ monitoring_group_name }}"
+    - mons
+    - mgrs
+    - osds
   become: true
   gather_facts: false
   tasks:
@@ -60,7 +60,7 @@
       when: ceph_container_registry_auth | default(False) | bool
 
 - name: bootstrap the cluster
-  hosts: "{{ mon_group_name }}[0]"
+  hosts: "{{ groups.get('mons')[0] }}"
   become: true
   gather_facts: false
   environment:
@@ -103,15 +103,9 @@
 
 - name: add the other nodes
   hosts:
-    - "{{ mon_group_name }}"
-    - "{{ osd_group_name }}"
-    - "{{ mds_group_name }}"
-    - "{{ rgw_group_name }}"
-    - "{{ mgr_group_name }}"
-    - "{{ rbdmirror_group_name}}"
-    - "{{ nfs_group_name }}"
-    - "{{ iscsi_gw_group_name }}"
-    - "{{ monitoring_group_name }}"
+    - mons
+    - mgrs
+    - osds
   become: true
   gather_facts: false
   environment:
@@ -125,7 +119,7 @@
       changed_when: false
       run_once: true
       register: cephadm_pubpkey
-      delegate_to: '{{ groups[mon_group_name][0] }}'
+      delegate_to: "{{ groups['mons'][0] }}"
 
     - name: allow cephadm key for root account
       authorized_key:
@@ -139,21 +133,21 @@
     - name: manage nodes with cephadm
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host add {{ ansible_facts['hostname'] }} {{ ansible_facts['default_ipv4']['address'] }} {{ group_names | join(' ') }} {{ '_admin' if inventory_hostname == 'ceph-node0' else '' }}"
       changed_when: false
-      delegate_to: '{{ groups[mon_group_name][0] }}'
+      delegate_to: "{{ groups['mons'][0] }}"
 
     - name: add ceph label for core component
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host label add {{ ansible_facts['hostname'] }} ceph"
       changed_when: false
-      delegate_to: '{{ groups[mon_group_name][0] }}'
-      when: inventory_hostname in groups.get(mon_group_name, []) or
-            inventory_hostname in groups.get(osd_group_name, []) or
-            inventory_hostname in groups.get(mds_group_name, []) or
-            inventory_hostname in groups.get(rgw_group_name, []) or
-            inventory_hostname in groups.get(mgr_group_name, []) or
-            inventory_hostname in groups.get(rbdmirror_group_name, [])
+      delegate_to: "{{ groups['mons'][0] }}"
+      when: inventory_hostname in groups.get('mons', []) or
+            inventory_hostname in groups.get('osds', []) or
+            inventory_hostname in groups.get('mdss', []) or
+            inventory_hostname in groups.get('rgws', []) or
+            inventory_hostname in groups.get('mgrs', []) or
+            inventory_hostname in groups.get('rbdmirrors', [])
 
 - name: adjust service placement
-  hosts: "{{ mon_group_name }}[0]"
+  hosts: "{{ groups.get('mons')[0] }}"
   become: true
   gather_facts: false
   environment:
@@ -163,19 +157,19 @@
         name: ceph-defaults
 
     - name: update the placement of monitor hosts
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mon --placement='label:{{ mon_group_name }}'"
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mon --placement='label:mons'"
       changed_when: false
 
     - name: waiting for the monitor to join the quorum...
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} quorum_status --format json"
       changed_when: false
       register: ceph_health_raw
-      until: (ceph_health_raw.stdout | from_json)["quorum_names"] | length == groups.get(mon_group_name, []) | length
+      until: (ceph_health_raw.stdout | from_json)["quorum_names"] | length == groups.get('mons', []) | length
       retries: "{{ health_mon_check_retries }}"
       delay: "{{ health_mon_check_delay }}"
 
     - name: update the placement of manager hosts
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mgr --placement='label:{{ mgr_group_name }}'"
+      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mgr --placement='label:mgrs'"
       changed_when: false
 
     - name: update the placement of osd hosts
@@ -187,7 +181,7 @@
       changed_when: false
 
 - name: adjust monitoring service placement
-  hosts: "{{ monitoring_group_name }}"
+  hosts: "monitoring"
   become: true
   gather_facts: false
   environment:
@@ -197,7 +191,7 @@
         name: ceph-defaults
 
     - name: dashboard related tasks
-      delegate_to: '{{ groups[mon_group_name][0] }}'
+      delegate_to: "{{ groups['mons'][0] }}"
       run_once: true
       block:
         - name: enable the prometheus module
@@ -205,15 +199,15 @@
           changed_when: false
 
         - name: update the placement of alertmanager hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply alertmanager --placement='label:{{ monitoring_group_name }}'"
+          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply alertmanager --placement='label:monitoring'"
           changed_when: false
 
         - name: update the placement of grafana hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply grafana --placement='label:{{ monitoring_group_name }}'"
+          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply grafana --placement='label:monitoring'"
           changed_when: false
 
         - name: update the placement of prometheus hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply prometheus --placement='label:{{ monitoring_group_name }}'"
+          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply prometheus --placement='label:monitoring'"
           changed_when: false
 
         - name: update the placement of node-exporter hosts
@@ -221,7 +215,7 @@
           changed_when: false
 
 - name: print information
-  hosts: "{{ mon_group_name }}[0]"
+  hosts: "{{ groups.get('mons')[0] }}"
   become: true
   gather_facts: false
   environment:
