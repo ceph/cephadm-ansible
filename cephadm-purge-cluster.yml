@@ -138,3 +138,20 @@
     - name: purge ceph daemons
       command: "cephadm rm-cluster --force {{ '--zap-osds' if ceph_origin == 'rhcs' or ceph_origin == 'shaman' else '' }} --fsid {{ fsid }}"
       when: group_names != [client_group]
+
+
+- name: remove ceph packages
+  hosts: all
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - import_role:
+        name: ceph-defaults
+
+    - name: remove ceph packages
+      package:
+        name: "{{ 'ceph-common' if group_names == [client_group] else ceph_pkgs | unique }}"
+        state: absent
+      register: result
+      until: result is succeeded
