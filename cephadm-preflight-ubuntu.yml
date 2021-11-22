@@ -1,0 +1,29 @@
+---
+- name: cephadm preflight on Ubuntu
+  hosts: all
+  tasks:
+    - apt:
+        upgrade: safe
+      when: ansible_facts['distribution_release']  == 'focal'
+
+    - apt_repository:
+        repo: deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/ /
+        state: present 
+        filename: devel:kubic:libcontainers:stable.list
+        update_cache: no
+      when: ansible_facts['distribution_release']  == 'focal' 
+
+    - apt_key:
+        url: https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/stable/xUbuntu_20.04/Release.key
+        state: present
+
+    - name: install apt packages
+      apt:
+        name: "{{ item }}"
+        state: present
+        update_cache: yes
+      loop:
+        - python3
+        - podman
+        - cephadm
+        - ceph-common
