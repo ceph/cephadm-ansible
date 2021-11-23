@@ -42,11 +42,11 @@
     - name: debian family of OS related tasks
       when: ansible_facts['distribution'] == 'Ubuntu' or ansible_facts['distribution'] == 'Debian'
       block:
-      - name: enable repo from download.ceph.com
-        block:
-        - name: configure ceph community repository stable key
-          apt_key:
-            url: "{{ ceph_stable_key }}"
+        - name: enable repo from download.ceph.com
+          block:
+          - name: configure ceph community repository stable key
+            apt_key:
+              url: "{{ ceph_stable_key }}"
             state: present
         
         - name: configure Ceph community repository
