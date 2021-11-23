@@ -91,8 +91,8 @@
     - name: redhat family of OS related tasks
       when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
       block:
-      - name: rhcs related tasks
-        when: ceph_origin == 'rhcs'
+        - name: rhcs related tasks
+          when: ceph_origin == 'rhcs'
         block:
           - name: enable red hat storage tools repository
             rhsm_repository:
