@@ -66,10 +66,9 @@
                 update_cache: no
 
         - name: install prerequisites packages
-          apt:
+          package:
             name: "{{ 'ceph-common' if group_names == [client_group] else ['python3','cephadm','ceph-common'] | unique }}"
-            state: present
-            update_cache: yes
+            state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
           register: result
           until: result is succeeded
       
