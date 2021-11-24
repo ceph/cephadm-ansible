@@ -44,6 +44,14 @@
       block:
         - name: enable repo from download.ceph.com
           block:
+            - name: prevent ceph certificate error
+              apt:
+                name: ca-certificates
+                state: latest
+                update_cache: yes
+              register: result
+              until: result is succeeded
+
             - name: configure ceph community repository stable key
               apt_key:
                 url: "{{ ceph_stable_key }}"
@@ -66,9 +74,10 @@
                 update_cache: no
 
         - name: install prerequisites packages
-          package:
+          apt:
             name: "{{ 'ceph-common' if group_names == [client_group] else ['python3','cephadm','ceph-common'] | unique }}"
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
+            update_cache: yes
           register: result
           until: result is succeeded
       
@@ -91,11 +100,11 @@
                     name: "{{ item }}"
                     state: absent
                   loop:
-                  - docker 
-                  - docker-engine
-                  - docker.io
-                  - containerd
-                  - runc
+                    - docker 
+                    - docker-engine
+                    - docker.io
+                    - containerd
+                    - runc
 
                 - name: configure docker repository key
                   apt_key:
@@ -117,9 +126,9 @@
                   register: result
                   until: result is succeeded
                   loop:
-                  - docker-ce
-                  - docker-ce-cli
-                  - containerd.io
+                    - docker-ce
+                    - docker-ce-cli
+                    - containerd.io
 
     - name: redhat family of OS related tasks
       when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
