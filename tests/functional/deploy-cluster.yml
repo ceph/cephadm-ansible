@@ -173,7 +173,16 @@
       changed_when: false
 
     - name: update the placement of osd hosts
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply osd --all-available-devices"
+      shell: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply osd -i -"
+      args:
+        stdin: |
+          service_type: osd
+          service_id: osd
+          placement:
+            label: osds
+          spec:
+            data_devices:
+              all: true
       changed_when: false
 
     - name: update the placement of crash hosts
