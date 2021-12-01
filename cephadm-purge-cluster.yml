@@ -136,7 +136,7 @@
         name: ceph-defaults
 
     - name: purge ceph daemons
-      command: "cephadm rm-cluster --force {{ '--zap-osds' if ceph_origin == 'rhcs' or ceph_origin == 'shaman' else '' }} --fsid {{ fsid }}"
+      command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
       when: group_names != [client_group]
 
 
