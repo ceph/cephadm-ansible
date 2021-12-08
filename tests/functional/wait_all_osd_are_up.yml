@@ -8,6 +8,6 @@
       register: result
       retries: 100
       delay: 2
-      until: 
+      until:
         - (result.stdout | from_json)["num_osds"] | int > 0
         - (result.stdout | from_json)["num_osds"] == (result.stdout | from_json)["num_up_osds"]
