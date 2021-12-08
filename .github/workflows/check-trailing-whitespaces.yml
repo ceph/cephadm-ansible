@@ -1,0 +1,15 @@
+name: check-trailing-whitespaces
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          ret=0
+          for file in $(find ./ -type f -not -path "./.git*")
+          do
+            grep -nH -E ' +$' $file && ret=1
+          done
+          test $ret -eq 1 && echo 'One or more trailing whitespaces were found!'
+          exit $ret
