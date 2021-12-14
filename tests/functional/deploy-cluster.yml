@@ -14,7 +14,7 @@
   gather_facts: false
   tasks:
     - import_role:
-        name: ceph-defaults
+        name: ceph_defaults
 
     - name: gather and delegate facts
       setup:
@@ -67,7 +67,7 @@
     CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
-        name: ceph-defaults
+        name: ceph_defaults
 
     - name: create /etc/ceph directory
       file:
@@ -112,7 +112,7 @@
     CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
-        name: ceph-defaults
+        name: ceph_defaults
 
     - name: get the cephadm ssh pub key
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} cephadm get-pub-key"
@@ -154,7 +154,7 @@
     CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
-        name: ceph-defaults
+        name: ceph_defaults
 
     - name: update the placement of monitor hosts
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mon --placement='label:mons'"
@@ -197,7 +197,7 @@
     CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
-        name: ceph-defaults
+        name: ceph_defaults
 
     - name: dashboard related tasks
       delegate_to: "{{ groups['mons'][0] }}"
@@ -231,7 +231,7 @@
     CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
-        name: ceph-defaults
+        name: ceph_defaults
 
     - name: show ceph orchestrator services
       command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
