@@ -4,7 +4,7 @@
 #
 # Distribute keyring and conf files to a set of clients
 #
-# Uses ceph-defaults
+# Uses ceph_defaults
 #  - local_client_dir: determines the dir name for the config files on the ansible host
 #  - ceph_client_pkgs: list of pre-req packages that must be on the client
 #
@@ -29,8 +29,9 @@
   gather_facts: false
   tasks:
 
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: fail if the fsid parameter is missing
       fail:
@@ -111,8 +112,9 @@
   gather_facts: false
   tasks:
 
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: slurp the keyring
       slurp:
@@ -140,8 +142,9 @@
   gather_facts: false
   tasks:
 
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: install ceph client prerequisites if needed
       package:
@@ -159,8 +162,18 @@
         mode: '0600'
         backup: yes
       loop:
-        - { content: "{{ hostvars[groups['admin'][0]]['client_keyring']['content'] | b64decode }}", dest: '/etc/ceph/ceph.keyring', copy_file: True }
-        - { content: "{{ hostvars[groups['admin'][0]]['minimal_ceph_config']['stdout'] | default('') }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ conf is undefined }}" }
-        - { content: "{{ hostvars[groups['admin'][0]]['ceph_config']['content'] | default('') | b64decode }}", dest: '/etc/ceph/ceph.conf', copy_file: "{{ hostvars[groups['admin'][0]]['ceph_config']['skipped'] is undefined }}" }
+        - { content: "{{ hostvars[groups['admin'][0]] \
+                         ['client_keyring']['content'] | b64decode }}",
+            dest: '/etc/ceph/ceph.keyring',
+            copy_file: True }
+        - { content: "{{ hostvars[groups['admin'][0]] \
+                         ['minimal_ceph_config']['stdout'] | default('') }}",
+            dest: '/etc/ceph/ceph.conf',
+            copy_file: "{{ conf is undefined }}" }
+        - { content: "{{ hostvars[groups['admin'][0]] \
+                         ['ceph_config']['content'] | default('') | b64decode }}",
+            dest: '/etc/ceph/ceph.conf',
+            copy_file: "{{ hostvars[groups['admin'][0]] \
+                           ['ceph_config']['skipped'] is undefined }}" }
       when: item.copy_file | bool
       no_log: true

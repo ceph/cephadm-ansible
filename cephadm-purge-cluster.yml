@@ -59,8 +59,9 @@
   any_errors_fatal: true
   tasks:
 
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: check cephadm binary is available
       command: which cephadm
@@ -124,6 +125,7 @@
   tasks:
     - name: pause cephadm
       command: "cephadm shell --fsid {{ fsid }} -- ceph orch pause"
+      changed_when: false
 
 
 - name: Purge ceph daemons from all hosts in the cluster
@@ -132,8 +134,9 @@
   gather_facts: false
   any_errors_fatal: true
   tasks:
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: purge ceph daemons
       command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
@@ -146,8 +149,9 @@
   gather_facts: false
   any_errors_fatal: true
   tasks:
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: remove ceph packages
       package:
