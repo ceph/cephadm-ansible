@@ -8,6 +8,68 @@ are:
 * Client: Setting up client hosts
 * Purge: Remove a Ceph cluster
 
+
+# Terminology
+**<ins>admin host</ins>:**\
+A host where the admin keyring and ceph config file is present.\
+Although the admin host and the bootstrap host are usually the same host, it is possible to have multiple admin hosts later.\
+`cephadm` will make a host become 'admin' when the label `_admin` is added to that host. (ie: `ceph orch host label add <host> _admin`).\
+This hosts should be present in the group `[admin]` in the ansible inventory.\
+If for some reason you decide a host shouldn't be a 'admin host' anymore, you have to :
+
+* remove it from the group `[admin]` in the ansible inventory,
+* remove the admin keyring,
+* remove the ceph config file,
+* remove the '_admin' label. (ie `ceph orch host label rm <host> _admin`)
+
+
+**<ins>ansible host</ins>:**\
+The host where any cephadm-ansible playbook is run.
+
+**<ins>bootstrap host</ins>:**\
+The host where the ceph cluster will start.\
+Unless you pass `--skip-admin-label` option to `ceph bootstram` command, this host will get the admin keyring and the ceph config file present, therefore, it should be considered as an 'admin host'.
+This hosts should be present in the group `[admin]` in the ansible inventory.
+
+
+# Ansible inventory
+The ansible inventory is a file where all the hosts intended to be part of the ceph cluster will be listed.\
+The most common format are INI or YAML.
+
+Although you probably want to keep it as simple as possible, you can organize your inventory and create groups, `cephadm-ansible` won't make any difference except for the following requirements:
+
+* Client hosts must be defined in a dedicated group `[clients]`.
+* Both `cephadm-purge-cluster.yml` and `cephadm-clients.yml` playbooks requires a group `[admin]` with at least one admin host (usually it will be the bootstrap node).
+
+> **__NOTE:__** the name of the client group can be changed. In that case you have to set the variable `client_group`.
+
+Otherwise, you can create groups such as `[monitors]`, `[osds]`, `[rgws]`, that might help you keep clarity in your inventory file and probably ease the `--limit` usage if you plan to use it to target a group of node only.
+
+A basic inventory would look like following:
+
+```ini
+# cat hosts
+ceph-mon1
+ceph-mon2
+ceph-mon3
+ceph-osd1
+ceph-osd2
+ceph-osd3
+ceph-mds1
+ceph-mds2
+ceph-rgw1
+ceph-rgw2
+
+[clients]
+ceph-client1
+ceph-client2
+ceph-client3
+
+[admin]
+ceph-mon1
+```
+
+
 # Preflight
 
 This playbook configures the Ceph repository.
