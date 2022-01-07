@@ -39,6 +39,14 @@
     - name: import_role ceph_defaults
       import_role:
         name: ceph_defaults
+
+    - name: fail when ceph_origin is custom with no repo url defined
+      fail:
+        msg: "You must pass custom_repo_url when ceph_origin is 'custom'"
+      when:
+        - ceph_origin == 'custom'
+        - custom_repo_url is undefined
+
     - name: redhat family of OS related tasks
       when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
       block:
@@ -111,6 +119,22 @@
               with_items:
                 - ceph_stable
                 - ceph_stable_noarch
+
+        - name: enable custom repo
+          when: ceph_origin == 'custom'
+          block:
+            - name: setup custom repository
+              yum_repository:
+                name: ceph_custom
+                description: Ceph custom repo
+                gpgcheck: "{{ 'yes' if custom_repo_gpgkey is defined else 'no' }}"
+                state: present
+                gpgkey: "{{ custom_repo_gpgkey | default(omit) }}"
+                baseurl: "{{ custom_repo_url }}"
+                file: ceph_custom
+                priority: '2'
+              register: result
+              until: result is succeeded
 
         - name: install epel-release
           package:
