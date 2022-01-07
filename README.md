@@ -112,6 +112,33 @@ node123
 
 Then you can run the playbook as shown above.
 
+Options:
+
+`ceph_origin`: The source of Ceph repositories.\
+**valid values:**
+
+* `rhcs`: Repository from Red Hat Ceph Storage.
+* `community`: Community repository (https://download.ceph.com)
+* `custom`: Custom repository.
+* `shaman`: Devel repository.
+
+**default**: community
+
+`ceph_stable_key`: URL to the gpg key.\
+**default**: https://download.ceph.com/keys/release.asc
+
+`ceph_release`: The release of Ceph.
+**default**: pacific
+
+`ceph_dev_branch`: The development branch to be used in shaman when `ceph_origin` is 'shaman'.\
+**default**: master
+
+`ceph_dev_sha1`: The sha1 corresponding to the build to be used when `ceph_origin` is 'shaman'.\
+**default**: latest
+
+`custom_repo_url`: The url of the repository when `ceph_origin` is 'custom'.
+`custom_repo_gpgkey`: The url of the gpg key corresponding to the repository set in `custom_repo_url` when `ceph_origin` is 'custom'.
+
 # Purge
 
 This playbook purges a Ceph cluster managed with cephadm
