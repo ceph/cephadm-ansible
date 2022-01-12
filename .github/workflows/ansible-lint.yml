@@ -10,5 +10,5 @@ jobs:
         with:
           python-version: '3.8'
           architecture: x64
-      - run: pip install -r <(grep ansible tests/requirements.txt) ansible-lint==4.3.7
-      - run: ansible-lint -v --force-color ./*.yml
+      - run: pip install -r <(grep ansible tests/requirements.txt) ansible-lint==5.3.2
+      - run: ansible-lint -v --force-color -c tests/ansible-lint.conf ./*.yml
