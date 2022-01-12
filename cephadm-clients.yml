@@ -167,7 +167,7 @@
             dest: '/etc/ceph/ceph.keyring',
             copy_file: True }
         - { content: "{{ hostvars[groups['admin'][0]] \
-                         ['minimal_ceph_config']['stdout'] | default('') }}",
+                         ['minimal_ceph_config']['stdout'] | default('') }}{{ '\n' }}",
             dest: '/etc/ceph/ceph.conf',
             copy_file: "{{ conf is undefined }}" }
         - { content: "{{ hostvars[groups['admin'][0]] \
