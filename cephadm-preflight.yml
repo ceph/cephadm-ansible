@@ -113,12 +113,18 @@
                 - ceph_stable_noarch
 
         - name: install epel-release
-          package:
-            name: epel-release
-            state: present
-          register: result
-          until: result is succeeded
           when: ansible_facts['distribution'] == 'CentOS'
+          block:
+            - name: enable CentOS PowerTools repository for epel
+              command: dnf config-manager --set-enabled powertools
+              changed_when: false
+
+            - name: install package
+              package:
+                name: epel-release
+                state: present
+              register: result
+              until: result is succeeded
 
 
         - name: install prerequisites packages
