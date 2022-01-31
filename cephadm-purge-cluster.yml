@@ -118,13 +118,13 @@
       when: ireallymeanit != 'yes'
 
 
-- name: Pause cephadm operations
+- name: disable cephadm operations
   hosts: "admin[0]"
   become: true
   gather_facts: false
   tasks:
-    - name: pause cephadm
-      command: "cephadm shell --fsid {{ fsid }} -- ceph orch pause"
+    - name: disable cephadm
+      command: "cephadm shell --fsid {{ fsid }} -- ceph mgr module disable cephadm"
       changed_when: false
 
 
