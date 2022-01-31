@@ -63,8 +63,6 @@
   hosts: "{{ groups.get('mons')[0] }}"
   become: true
   gather_facts: false
-  environment:
-    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph_defaults
@@ -77,29 +75,6 @@
     - name: bootstrap initial cluster
       command: "{{ cephadm_cmd }} bootstrap --mon-ip {{ monitor_address }} --skip-pull --skip-dashboard --skip-monitoring-stack {{ '--fsid ' + fsid if fsid is defined else '' }}"
 
-    - name: set default container image in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set global container_image {{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}"
-      changed_when: false
-
-    - name: set container image base in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_base {{ ceph_container_registry }}/{{ ceph_container_image }}"
-      changed_when: false
-
-    - name: set alertmanager container image in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_alertmanager {{ alertmanager_container_image }}"
-      changed_when: false
-
-    - name: set grafana container image in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_grafana {{ grafana_container_image }}"
-      changed_when: false
-
-    - name: set node-exporter container image in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_node_exporter {{ node_exporter_container_image }}"
-      changed_when: false
-
-    - name: set prometheus container image in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_prometheus {{ prometheus_container_image }}"
-      changed_when: false
 
 - name: add the other nodes
   hosts:
@@ -108,8 +83,6 @@
     - osds
   become: true
   gather_facts: false
-  environment:
-    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph_defaults
@@ -150,8 +123,6 @@
   hosts: "{{ groups.get('mons')[0] }}"
   become: true
   gather_facts: false
-  environment:
-    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph_defaults
@@ -193,8 +164,6 @@
   hosts: "monitoring"
   become: true
   gather_facts: false
-  environment:
-    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph_defaults
@@ -227,8 +196,6 @@
   hosts: "{{ groups.get('mons')[0] }}"
   become: true
   gather_facts: false
-  environment:
-    CEPHADM_IMAGE: '{{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}'
   tasks:
     - import_role:
         name: ceph_defaults
