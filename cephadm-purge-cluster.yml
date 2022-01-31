@@ -11,30 +11,36 @@
 #
 # ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
 
-- name: confirm whether user really meant to upgrade the cluster
+
+- name: check local prerequisites are in place
   hosts: localhost
-  become: false
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+
   tasks:
     - name: fail if fsid was not provided
       fail:
-        msg: >
+        msg: |
           You must provide the cluster fsid to be purged.
-          ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+          e.g. ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
       when: fsid is undefined
 
     - name: fail if admin group doesn't exist or is empty
       fail:
-        msg: >
+        msg: |
           You must define a group [admin] in your inventory and add a node where
           admin keyring is present at /etc/ceph/admin.client.keyring
       when: "'admin' not in groups or groups['admin'] | length < 1"
 
-- name: make sure admin keyring is present and pause cephadm
-  hosts: "admin[0]"
-  become: true
+
+- name: check keyring is present on the admin host
+  hosts: admin[0]
   gather_facts: false
+  any_errors_fatal: true
   tasks:
-    - name: check /etc/ceph/admin.client.keyring
+
+    - name: check /etc/ceph/ceph.admin.client.keyring
       stat:
         path: /etc/ceph/ceph.client.admin.keyring
       register: admin_keyring_stat
@@ -42,16 +48,114 @@
     - name: fail if /etc/ceph/admin.client.keyring is not present
       fail:
         msg: >
-          You must have /etc/ceph/ceph.client.admin.keyring on this node ({{ inventory_hostname }})
+          You must have /etc/ceph/ceph.client.admin.keyring present on {{ inventory_hostname }}
       when: not admin_keyring_stat.stat.exists | bool
 
-    - name: pause cephadm
-      command: "cephadm shell --fsid {{ fsid }} -- ceph orch pause"
 
-- hosts: all
+- name: check cluster hosts have cephadm and the required fsid {{ fsid }}
+  hosts: all
+  gather_facts: false
+  become: true
+  any_errors_fatal: true
+  tasks:
+
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
+
+    - name: check cephadm binary is available
+      command: which cephadm
+      register: cephadm_exists
+      changed_when: false
+      failed_when: false
+      when: group_names != [client_group]
+
+    - name: fail if cephadm is not available
+      fail:
+        msg: |
+          The cephadm binary is missing on {{ inventory_hostname }}. To purge the cluster you must have cephadm installed
+          on ALL ceph hosts. Install manually or use the preflight playbook.
+      when:
+        - group_names != [client_group]
+        - cephadm_exists.rc
+
+    - name: check fsid directory given is valid across the cluster
+      stat:
+        path: /var/lib/ceph/{{ fsid }}
+      register: fsid_exists
+      when: group_names != [client_group]
+
+    - name: fail if the fsid directory is missing
+      fail:
+        msg: |
+          The fsid directory '/var/lib/ceph/{{ fsid }}' can not be found on {{ inventory_hostname }}
+          Is the fsid correct?
+      when:
+        - group_names != [client_group]
+        - not fsid_exists.stat.exists | bool
+
+
+- name: confirm whether user really wants to purge the cluster
+  hosts: localhost
+  gather_facts: false
+  become: false
+
+  vars_prompt:
+    - name: ireallymeanit
+      prompt: |
+
+        Are you sure you want to purge the cluster with fsid={{ fsid }} ?
+      default: 'no'
+      private: no
+
+  tasks:
+    - name: exit playbook, if user did not mean to purge cluster
+      fail:
+        msg: |
+            Exiting cephadm-purge-cluster playbook, cluster was NOT purged.
+            To purge the cluster, either say 'yes' at the prompt or use `-e ireallymeanit=yes`
+            on the command line when invoking the playbook
+      when: ireallymeanit != 'yes'
+
+
+- name: Pause cephadm operations
+  hosts: "admin[0]"
   become: true
   gather_facts: false
   tasks:
-    - name: purge ceph cluster
+    - name: pause cephadm
+      command: "cephadm shell --fsid {{ fsid }} -- ceph orch pause"
+      changed_when: false
+
+
+- name: Purge ceph daemons from all hosts in the cluster
+  hosts: all
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
+
+    - name: purge ceph daemons
       command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
-      when: group_names != ['clients']
+      when: group_names != [client_group]
+
+
+- name: remove ceph packages
+  hosts: all
+  become: true
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
+
+    - name: remove ceph packages
+      package:
+        name: "{{ 'ceph-common' if group_names == [client_group] else ceph_pkgs | unique }}"
+        state: absent
+      register: result
+      until: result is succeeded

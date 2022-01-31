@@ -1,0 +1,14 @@
+name: ansible-lint
+on: [pull_request]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+          architecture: x64
+      - run: pip install -r <(grep ansible tests/requirements.txt) ansible-lint==5.3.2
+      - run: ansible-lint -v --force-color -c tests/ansible-lint.conf ./*.yml

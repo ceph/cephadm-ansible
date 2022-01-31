@@ -36,8 +36,9 @@
   become: true
   gather_facts: true
   tasks:
-    - import_role:
-        name: ceph-defaults
+    - name: import_role ceph_defaults
+      import_role:
+        name: ceph_defaults
 
     - name: rhcs related tasks
       when: ceph_origin == 'rhcs'
@@ -87,7 +88,7 @@
       block:
         - name: fetch ceph red hat development repository
           uri:
-            url: "https://shaman.ceph.com/api/repos/ceph/{{ ceph_dev_branch }}/{{ ceph_dev_sha1 }}/centos/{{ ansible_facts['distribution_major_version'] }}/repo?arch={{ ansible_facts['architecture'] }}"
+            url: https://shaman.ceph.com/api/repos/ceph/{{ ceph_dev_branch }}/{{ ceph_dev_sha1 }}/centos/{{ ansible_facts['distribution_major_version'] }}/repo?arch={{ ansible_facts['architecture'] }}  # noqa 204
             return_content: yes
           register: ceph_dev_yum_repo
 
@@ -97,6 +98,7 @@
             dest: /etc/yum.repos.d/ceph-dev.repo
             owner: root
             group: root
+            mode: '0644'
             backup: yes
 
         - name: remove ceph_stable repositories
@@ -119,7 +121,7 @@
 
     - name: install prerequisites packages
       package:
-        name: "{{ ['chrony', 'ceph-common'] if group_names == ['clients'] else ceph_pkgs | unique }}"
+        name: "{{ ceph_client_pkgs if group_names == [client_group] else ceph_pkgs | unique }}"
         state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
       register: result
       until: result is succeeded

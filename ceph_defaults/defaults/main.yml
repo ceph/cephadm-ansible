@@ -1,0 +1,18 @@
+---
+ceph_origin: community
+ceph_dev_branch: master
+ceph_dev_sha1: latest
+ceph_rhcs_version: 5
+ceph_mirror: https://download.ceph.com
+ceph_stable_key: https://download.ceph.com/keys/release.asc
+ceph_release: pacific
+upgrade_ceph_packages: false
+ceph_pkgs:
+  - chrony
+  - cephadm
+  - podman
+  - ceph-common
+ceph_client_pkgs:
+  - chrony
+  - ceph-common
+client_group: clients
