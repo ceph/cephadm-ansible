@@ -75,14 +75,6 @@
     - name: bootstrap initial cluster
       command: "{{ cephadm_cmd }} bootstrap --mon-ip {{ monitor_address }} --skip-pull --skip-dashboard --skip-monitoring-stack {{ '--fsid ' + fsid if fsid is defined else '' }}"
 
-    - name: set default container image in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set global container_image {{ ceph_container_registry }}/{{ ceph_container_image }}:{{ ceph_container_image_tag }}"
-      changed_when: false
-
-    - name: set container image base in ceph configuration
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} config set mgr mgr/cephadm/container_image_base {{ ceph_container_registry }}/{{ ceph_container_image }}"
-      changed_when: false
-
 
 - name: add the other nodes
   hosts:
