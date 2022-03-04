@@ -5,7 +5,7 @@ ceph_dev_sha1: latest
 ceph_rhcs_version: 5
 ceph_mirror: https://download.ceph.com
 ceph_stable_key: https://download.ceph.com/keys/release.asc
-ceph_release: pacific
+ceph_release: quincy
 upgrade_ceph_packages: false
 ceph_pkgs:
   - chrony
