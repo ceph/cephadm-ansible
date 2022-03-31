@@ -17,20 +17,6 @@
 #
 # ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
 #
-# If you plan to deploy 'client' nodes, you must add a group called 'clients' in your inventory:
-#
-# $ cat hosts
-# mynode1
-# mynode2
-# mynode3
-#
-# [clients]
-# client1
-# client2
-# client3
-#
-# Then, you can run the the same way as shown above. The playbook will automatically install
-# chronyd and ceph-common on those nodes.
 
 - hosts: all
   become: true
@@ -153,7 +139,7 @@
 
         - name: install prerequisites packages
           package:
-            name: "{{ ceph_client_pkgs if group_names == [client_group] else ceph_pkgs | unique }}"
+            name: "{{ ceph_pkgs }}"
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
           register: result
           until: result is succeeded
@@ -200,7 +186,7 @@
 
         - name: install prerequisites packages
           apt:
-            name: "{{ 'ceph-common' if group_names == [client_group] else ['python3','cephadm','ceph-common'] | unique }}"
+            name: "{{ ['python3','cephadm','ceph-common'] }}"
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
             update_cache: yes
           register: result
@@ -209,7 +195,7 @@
         - name: install container engine
           block:
             - name: install podman
-              when: ansible_facts['distribution_version'] is version('20.10', '>=') and group_names != [client_group]
+              when: ansible_facts['distribution_version'] is version('20.10', '>=')
               apt:
                 name: podman
                 state: present
@@ -218,7 +204,7 @@
               until: result is succeeded
 
             - name: install docker
-              when: ansible_facts['distribution_version'] is version('20.10', '<') and group_names != [client_group]
+              when: ansible_facts['distribution_version'] is version('20.10', '<')
               block:
                 - name: uninstall old version packages
                   apt:
