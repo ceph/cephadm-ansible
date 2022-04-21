@@ -73,8 +73,10 @@
         state: directory
 
     - name: bootstrap initial cluster
-      command: "{{ cephadm_cmd }} bootstrap --mon-ip {{ monitor_address }} --skip-pull --skip-dashboard --skip-monitoring-stack {{ '--fsid ' + fsid if fsid is defined else '' }}"
-
+      cephadm_bootstrap:
+        mon_ip: "{{ monitor_address }}"
+        fsid: "{{ fsid if fsid is defined else omit }}"
+        pull: false
 
 - name: add the other nodes
   hosts:
