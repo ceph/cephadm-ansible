@@ -28,30 +28,10 @@
       run_once: true
       when: delegate_facts_host | bool
 
-    - name: check if podman binary is present
-      stat:
-        path: /usr/bin/podman
-      register: podman_binary
-
-    - name: set_fact container_binary
-      set_fact:
-        container_binary: "{{ 'podman' if (podman_binary.stat.exists and ansible_facts['distribution'] == 'Fedora') or (ansible_facts['os_family'] == 'RedHat' and ansible_facts['distribution_major_version'] == '8') else 'docker' }}"
-
-    - name: check if it is atomic host
-      stat:
-        path: /run/ostree-booted
-      register: stat_ostree
-
-    - name: set_fact is_atomic
-      set_fact:
-        is_atomic: "{{ stat_ostree.stat.exists }}"
-
-    - name: set_fact cephadm_cmd
-      set_fact:
-        cephadm_cmd: "cephadm {{ '--docker' if container_binary == 'docker' else '' }}"
-
     - name: container registry authentication
-      command: "{{ cephadm_cmd }} registry-login --registry-url {{ ceph_container_registry }} --registry-username {{ ceph_container_registry_username }} --registry-password {{ ceph_container_registry_password }}"
+      ceph_orch:
+        cli_binary: true
+        command: "cephadm registry-login --registry-url {{ ceph_container_registry }} --registry-username {{ ceph_container_registry_username }} --registry-password {{ ceph_container_registry_password }}"
       changed_when: false
       environment:
         HTTP_PROXY: "{{ ceph_container_http_proxy | default('') }}"
@@ -90,7 +70,8 @@
         name: ceph_defaults
 
     - name: get the cephadm ssh pub key
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} cephadm get-pub-key"
+      ceph_orch:
+        command: "cephadm get-pub-key"
       changed_when: false
       run_once: true
       register: cephadm_pubpkey
@@ -102,17 +83,20 @@
         key: '{{ cephadm_pubpkey.stdout }}'
 
     - name: run cephadm prepare-host
-      command: cephadm prepare-host
+      ceph_orch:
+        cli_binary: true
+        command: cephadm prepare-host
       changed_when: false
 
     - name: manage nodes with cephadm
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host add {{ ansible_facts['hostname'] }} {{ ansible_facts['default_ipv4']['address'] }} {{ group_names | join(' ') }} {{ '_admin' if inventory_hostname == 'ceph-node0' else '' }}"
+      ceph_orch:
+        command: "orch host add {{ ansible_facts['hostname'] }} {{ ansible_facts['default_ipv4']['address'] }} {{ group_names | join(' ') }} {{ '_admin monitoring' if inventory_hostname == 'ceph-node0' else '' }}"
       changed_when: false
       delegate_to: "{{ groups['mons'][0] }}"
 
     - name: add ceph label for core component
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch host label add {{ ansible_facts['hostname'] }} ceph"
-      changed_when: false
+      ceph_orch:
+        command: "orch host label add {{ ansible_facts['hostname'] }} ceph"
       delegate_to: "{{ groups['mons'][0] }}"
       when: inventory_hostname in groups.get('mons', []) or
             inventory_hostname in groups.get('osds', []) or
@@ -130,24 +114,25 @@
         name: ceph_defaults
 
     - name: update the placement of monitor hosts
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mon --placement='label:mons'"
-      changed_when: false
+      ceph_orch:
+        command: "orch apply mon --placement=label:mons"
 
     - name: waiting for the monitor to join the quorum...
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} quorum_status --format json"
-      changed_when: false
+      ceph_orch:
+        command: "quorum_status --format json"
       register: ceph_health_raw
+      changed_when: false
       until: (ceph_health_raw.stdout | from_json)["quorum_names"] | length == groups.get('mons', []) | length
       retries: "{{ health_mon_check_retries }}"
       delay: "{{ health_mon_check_delay }}"
 
     - name: update the placement of manager hosts
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply mgr --placement='label:mgrs'"
-      changed_when: false
+      ceph_orch:
+        command: "orch apply mgr --placement=label:mgrs"
 
     - name: update the placement of osd hosts
-      shell: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply osd -i -"
-      args:
+      ceph_orch:
+        command: "orch apply osd -i -"
         stdin: |
           service_type: osd
           service_id: osd
@@ -159,53 +144,27 @@
       changed_when: false
 
     - name: update the placement of crash hosts
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply crash --placement='label:ceph'"
+      ceph_orch:
+        command: "orch apply crash --placement=label:ceph"
       changed_when: false
 
-- name: adjust monitoring service placement
-  hosts: "monitoring"
-  become: true
-  gather_facts: false
-  tasks:
-    - import_role:
-        name: ceph_defaults
-
-    - name: dashboard related tasks
-      delegate_to: "{{ groups['mons'][0] }}"
-      run_once: true
-      block:
-        - name: enable the prometheus module
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} mgr module enable prometheus"
-          changed_when: false
-
-        - name: update the placement of alertmanager hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply alertmanager --placement='label:monitoring'"
-          changed_when: false
-
-        - name: update the placement of grafana hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply grafana --placement='label:monitoring'"
-          changed_when: false
-
-        - name: update the placement of prometheus hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply prometheus --placement='label:monitoring'"
-          changed_when: false
-
-        - name: update the placement of node-exporter hosts
-          command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch apply node-exporter --placement='*'"
-          changed_when: false
-
-- name: print information
-  hosts: "{{ groups.get('mons')[0] }}"
-  become: true
-  gather_facts: false
-  tasks:
-    - import_role:
-        name: ceph_defaults
-
-    - name: show ceph orchestrator services
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
+    - name: enable the monitoring
+      ceph_orch:
+        command: "{{ item }}"
       changed_when: false
+      loop:
+        - "mgr module enable prometheus"
+        - "orch apply alertmanager --placement=label:monitoring"
+        - "orch apply grafana --placement=label:monitoring"
+        - "orch apply prometheus --placement=label:monitoring"
+        - "orch apply node-exporter --placement=*"
 
-    - name: show ceph orchestrator daemons
-      command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ps --refresh"
-      changed_when: false
+
+# TODO(guits): address the following tasks:
+    # - name: show ceph orchestrator services
+    #   command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
+    #   changed_when: false
+
+    # - name: show ceph orchestrator daemons
+    #   command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ps --refresh"
+    #   changed_when: false
