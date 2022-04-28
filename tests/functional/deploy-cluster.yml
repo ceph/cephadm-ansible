@@ -47,11 +47,6 @@
     - import_role:
         name: ceph_defaults
 
-    - name: create /etc/ceph directory
-      file:
-        path: /etc/ceph
-        state: directory
-
     - name: bootstrap initial cluster
       cephadm_bootstrap:
         mon_ip: "{{ monitor_address }}"
