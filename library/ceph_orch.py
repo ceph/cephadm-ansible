@@ -13,6 +13,57 @@ except ImportError:
 
 import datetime
 
+ANSIBLE_METADATA = {
+    'metadata_version': '1.1',
+    'status': ['preview'],
+    'supported_by': 'community'
+}
+
+DOCUMENTATION = '''
+---
+module: ceph_orch
+short_description: Ansible cephadm/orch wrapper
+version_added: "2.10"
+description:
+    - Run Ceph commands through Ansible
+options:
+    cli_binary:
+        description:
+            - Run a `cephadm` command from the binary.
+              See cephadm --help
+        required: false
+        default: false
+    command:
+        description:
+            - The command to be executed.
+        required: true
+    stdin:
+        description:
+            - data to be passed to stdin
+        required: false
+
+author:
+    - Guillaume Abrioux <gabrioux@redhat.com>
+'''
+
+EXAMPLES = '''
+- name: bootstrap initial cluster
+  ceph_orch:
+    cli_binary: true
+    command: "cephadm bootstrap --fsid 3c9ba63a-c7df-4476-a1e7-317dfc711f82 --mon-ip 1.2.3.4 --skip-pull"
+
+- name: get the cephadm ssh pub key
+  ceph_orch:
+    command: "cephadm get-pub-key"
+  register: pub_key
+
+- name: add a host
+  ceph_orch:
+    command: "orch host add ceph-node-01"
+'''
+
+RETURN = '''#  '''
+
 
 def main() -> None:
     module = AnsibleModule(
