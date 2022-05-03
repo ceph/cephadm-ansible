@@ -34,7 +34,7 @@
         - custom_repo_url is undefined
 
     - name: redhat family of OS related tasks
-      when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
+      when: ansible_facts['os_family'] == 'RedHat'
       block:
         - name: rhcs related tasks
           when: ceph_origin == 'rhcs'
