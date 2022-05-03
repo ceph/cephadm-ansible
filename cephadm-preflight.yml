@@ -106,21 +106,19 @@
                 - ceph_stable
                 - ceph_stable_noarch
 
-        - name: enable custom repo
+        - name: setup custom repository
+          yum_repository:
+            name: ceph_custom
+            description: Ceph custom repo
+            gpgcheck: "{{ 'yes' if custom_repo_gpgkey is defined else 'no' }}"
+            state: present
+            gpgkey: "{{ custom_repo_gpgkey | default(omit) }}"
+            baseurl: "{{ custom_repo_url }}"
+            file: ceph_custom
+            priority: '2'
+          register: result
+          until: result is succeeded
           when: ceph_origin == 'custom'
-          block:
-            - name: setup custom repository
-              yum_repository:
-                name: ceph_custom
-                description: Ceph custom repo
-                gpgcheck: "{{ 'yes' if custom_repo_gpgkey is defined else 'no' }}"
-                state: present
-                gpgkey: "{{ custom_repo_gpgkey | default(omit) }}"
-                baseurl: "{{ custom_repo_url }}"
-                file: ceph_custom
-                priority: '2'
-              register: result
-              until: result is succeeded
 
         - name: install epel-release
           when: ansible_facts['distribution'] == 'CentOS'
