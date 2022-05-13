@@ -132,6 +132,12 @@
       until: result is succeeded
       when: ansible_facts['distribution'] == 'CentOS'
 
+    - name: install ceph-common on rhel
+      command: dnf install --allowerasing --assumeyes ceph-common
+      changed_when: false
+      register: result
+      until: result is succeeded
+
     - name: install prerequisites packages
       package:
         name: "{{ ceph_client_pkgs if group_names == [client_group] else ceph_pkgs | unique }}"
