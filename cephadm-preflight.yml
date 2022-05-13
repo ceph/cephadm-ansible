@@ -57,6 +57,15 @@
               rhsm_repository:
                 name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms"
 
+            - name: disable older rhceph repositories if any
+              rhsm_repository:
+                name: "{{ item }}"
+                state: absent
+              loop:
+                - rhceph-4-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
+                - rhceph-4-mon-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
+                - rhceph-4-osd-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
+
         - name: enable repo from download.ceph.com
           when: ceph_origin == 'community'
           block:
@@ -158,6 +167,17 @@
             baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/$basearch"
             file: ceph_stable
             priority: '2'
+
+        - name: install ceph-common on rhel
+          command: dnf install --allowerasing --assumeyes ceph-common
+          changed_when: false
+          register: result
+          until: result is succeeded
+
+        - name: install prerequisites packages
+          package:
+            name: "{{ ceph_pkgs }}"
+            state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
           register: result
           until: result is succeeded
 

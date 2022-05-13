@@ -140,12 +140,19 @@
 - name: Distribute client configuration
   hosts: "{{ client_group }}"
   become: yes
-  gather_facts: false
+  gather_facts: true
   tasks:
 
     - name: import_role ceph_defaults
       import_role:
         name: ceph_defaults
+
+    - name: install ceph-common on rhel
+      command: dnf install --allowerasing --assumeyes ceph-common
+      changed_when: false
+      register: result
+      until: result is succeeded
+      when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
 
     - name: install ceph client prerequisites if needed
       package:
