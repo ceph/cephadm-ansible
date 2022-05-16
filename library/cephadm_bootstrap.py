@@ -22,7 +22,7 @@ try:
 except ImportError:
     from module_utils.ceph_common import exit_module
 import datetime
-
+import os
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -193,6 +193,37 @@ def main() -> None:
     startd = datetime.datetime.now()
 
     cmd = ['cephadm']
+    data_dir = '/var/lib/ceph'
+    ceph_conf = 'ceph.conf'
+    ceph_keyring = 'ceph.client.admin.keyring'
+    ceph_pubkey = 'ceph.pub'
+
+    if fsid:
+        if os.path.exists(os.path.join(data_dir, fsid)):
+            out = 'A cluster with fsid {} is already deployed.'.format(fsid)
+            exit_module(
+                rc=0,
+                startd=startd,
+                module=module,
+                cmd=cmd,
+                out=out,
+                changed=False
+            )
+
+    for f in [ceph_conf,
+              ceph_keyring,
+              ceph_pubkey]:
+        if not allow_overwrite:
+            if os.path.exists(os.path.join(data_dir, f)):
+                out = '{} already exists, skipping.'
+                exit_module(
+                    rc=0,
+                    startd=startd,
+                    module=module,
+                    cmd=cmd,
+                    out=out,
+                    changed=False
+                )
 
     if docker:
         cmd.append('--docker')
