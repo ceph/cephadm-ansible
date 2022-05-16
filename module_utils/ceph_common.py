@@ -19,8 +19,10 @@ def build_cmd(cli_binary: bool,
 
 
 def exit_module(module: "AnsibleModule",
-                out: str, rc: int, cmd: List[str],
-                err: str, startd: datetime.datetime,
+                rc: int, cmd: List[str],
+                startd: datetime.datetime,
+                out: str = '',
+                err: str = '',
                 changed: bool = False,
                 diff: Dict[str, str] = dict(before="", after="")) -> None:
     endd = datetime.datetime.now()
