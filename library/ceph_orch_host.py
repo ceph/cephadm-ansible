@@ -64,7 +64,7 @@ options:
         description:
             - if set to 'present', it will ensure the name specified
               in 'name' will be present.
-            - if set to 'present', it will remove the host specified in
+            - if set to 'absent', it will remove the host specified in
               'name'.
             - if set to 'drain', it will schedule to remove all daemons
               from the host specified in 'name'.
