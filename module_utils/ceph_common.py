@@ -1,8 +1,26 @@
 import datetime
+import time
 from typing import TYPE_CHECKING, List, Dict
 
 if TYPE_CHECKING:
     from ansible.module_utils.basic import AnsibleModule  # type: ignore
+
+
+def retry(exceptions, retries=20, delay=1):
+    def decorator(f):
+        def _retry(*args, **kwargs):
+            _tries = retries
+            while _tries > 1:
+                try:
+                    print("{}".format(_tries))
+                    return f(*args, **kwargs)
+                except exceptions:
+                    time.sleep(delay)
+                    _tries -= 1
+            print("{} has failed after {} tries".format(f, retries))
+            return f(*args, **kwargs)
+        return _retry
+    return decorator
 
 
 def build_cmd(cli_binary: bool,
