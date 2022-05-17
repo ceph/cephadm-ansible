@@ -20,9 +20,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module
+    from module_utils.ceph_common import exit_module, build_base_cmd
 import datetime
 
 
@@ -60,14 +60,6 @@ EXAMPLES = '''
         data_devices:
             all: true
 '''
-
-
-def build_base_cmd(module: "AnsibleModule") -> List[str]:
-    cmd = ['cephadm']
-    if module.params.get('docker'):
-        cmd.append('--docker')
-    cmd.extend(['shell', 'ceph', 'orch'])
-    return cmd
 
 
 def apply_spec(module: "AnsibleModule",

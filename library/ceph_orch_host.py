@@ -20,9 +20,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module
+    from module_utils.ceph_common import exit_module, build_base_cmd
 import datetime
 import json
 
@@ -94,14 +94,6 @@ EXAMPLES = '''
     name: my-node-01
     state: absent
 '''
-
-
-def build_base_cmd(module: "AnsibleModule") -> List[str]:
-    cmd = ['cephadm']
-    if module.params.get('docker'):
-        cmd.append('--docker')
-    cmd.extend(['shell', 'ceph', 'orch'])
-    return cmd
 
 
 def get_current_state(module: "AnsibleModule") -> Tuple[int, List[str], str, str]:
