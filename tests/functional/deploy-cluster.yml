@@ -101,8 +101,12 @@
         name: ceph_defaults
 
     - name: update the placement of monitor hosts
-      ceph_orch:
-        command: "orch apply mon --placement=label:mons"
+      ceph_orch_apply:
+        spec: |
+          service_type: mon
+          service_id: mon
+          placement:
+            label: mons
 
     - name: waiting for the monitor to join the quorum...
       ceph_orch:
@@ -118,9 +122,8 @@
         command: "orch apply mgr --placement=label:mgrs"
 
     - name: update the placement of osd hosts
-      ceph_orch:
-        command: "orch apply osd -i -"
-        stdin: |
+      ceph_orch_apply:
+        spec: |
           service_type: osd
           service_id: osd
           placement:
@@ -128,12 +131,14 @@
           spec:
             data_devices:
               all: true
-      changed_when: false
 
     - name: update the placement of crash hosts
-      ceph_orch:
-        command: "orch apply crash --placement=label:ceph"
-      changed_when: false
+      ceph_orch_apply:
+        spec: |
+          service_type: crash
+          service_id: crash
+          placement:
+            host_pattern: '*'
 
     - name: enable the monitoring
       ceph_orch:

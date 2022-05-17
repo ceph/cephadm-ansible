@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function
-from typing import TYPE_CHECKING, List, Tuple
+from typing import List, Tuple
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
@@ -40,35 +40,10 @@ version_added: "2.9"
 description:
     - apply a service spec
 options:
-    name:
+    spec:
         description:
-            - name of the host
+            - The service spec to apply
         required: true
-    address:
-        description:
-            - address of the host
-        required: true when state is present
-    set_admin_label:
-        description:
-            - enforce '_admin' label on the host specified
-              in 'name'
-        required: false
-        default: false
-    labels:
-        description:
-            - list of labels to apply on the host
-        required: false
-        default: []
-    state:
-        description:
-            - if set to 'present', it will ensure the name specified
-              in 'name' will be present.
-            - if set to 'present', it will remove the host specified in
-              'name'.
-            - if set to 'drain', it will schedule to remove all daemons
-              from the host specified in 'name'.
-        required: false
-        default: present
 author:
     - Guillaume Abrioux <gabrioux@redhat.com>
 '''
