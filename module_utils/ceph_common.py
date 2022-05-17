@@ -18,6 +18,14 @@ def build_cmd(cli_binary: bool,
     return _cmd
 
 
+def build_base_cmd(module: "AnsibleModule"):
+    cmd = ['cephadm']
+    if module.params.get('docker'):
+        cmd.append('--docker')
+    cmd.extend(['shell', 'ceph', 'orch'])
+    return cmd
+
+
 def exit_module(module: "AnsibleModule",
                 rc: int, cmd: List[str],
                 startd: datetime.datetime,
