@@ -29,6 +29,10 @@ version_added: "2.9"
 description:
     - Start, stop or restart ceph daemon
 options:
+    fsid:
+        description:
+            - the fsid of the Ceph cluster to interact with.
+        required: false
     state:
         description:
             - The desired state of the service specified in 'name'.
@@ -110,7 +114,8 @@ def main() -> None:
             daemon_type=dict(type='str', required=True),
             docker=dict(type=bool,
                         required=False,
-                        default=False)
+                        default=False),
+            fsid=dict(type='str', required=False)
         ),
         supports_check_mode=True,
     )
