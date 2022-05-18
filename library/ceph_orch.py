@@ -27,6 +27,10 @@ version_added: "2.10"
 description:
     - Run Ceph commands through Ansible
 options:
+    fsid:
+        description:
+            - the fsid of the Ceph cluster to interact with.
+        required: false
     cli_binary:
         description:
             - Run a `cephadm` command from the binary.
@@ -71,6 +75,7 @@ def main() -> None:
             cli_binary=dict(type='bool', required=False, default=False),
             command=dict(type='str', required=True),
             stdin=dict(type='str', required=False, default=None),
+            fsid=dict(type='str', required=False)
         ),
         supports_check_mode=True,
     )
@@ -93,7 +98,7 @@ def main() -> None:
 
     startd = datetime.datetime.now()
 
-    cmd = build_cmd(cli_binary, command)
+    cmd = build_cmd(module, cli_binary, command)
     rc, out, err = module.run_command(cmd, data=stdin)
 
     exit_module(module=module, out=out, rc=rc,

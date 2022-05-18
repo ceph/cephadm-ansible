@@ -23,13 +23,18 @@ def retry(exceptions, retries=20, delay=1):
     return decorator
 
 
-def build_cmd(cli_binary: bool,
+def build_cmd(module: "AnsibleModule",
+              cli_binary: bool,
               cmd: str) -> List[str]:
 
     _cmd = []
+    fsid = module.params.get('fsid')
 
     if not cli_binary:
-        _cmd.extend(['cephadm', 'shell', 'ceph'])
+        _cmd.extend(['cephadm', 'shell'])
+        if fsid:
+            _cmd.extend(['--fsid', fsid])
+        _cmd.append('ceph')
 
     _cmd.extend(cmd.split(' '))
 
@@ -38,9 +43,15 @@ def build_cmd(cli_binary: bool,
 
 def build_base_cmd(module: "AnsibleModule"):
     cmd = ['cephadm']
+    fsid = module.params.get('fsid')
+
     if module.params.get('docker'):
         cmd.append('--docker')
-    cmd.extend(['shell', 'ceph', 'orch'])
+    cmd.append('shell')
+    if fsid:
+        cmd.extend(['--fsid', fsid])
+    cmd.extend(['ceph', 'orch'])
+
     return cmd
 
 

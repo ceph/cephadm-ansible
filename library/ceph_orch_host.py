@@ -41,6 +41,10 @@ version_added: "2.9"
 description:
     - Add or remove hosts from ceph orchestration.
 options:
+    fsid:
+        description:
+            - the fsid of the Ceph cluster to interact with.
+        required: false
     name:
         description:
             - name of the host
@@ -154,7 +158,8 @@ def main() -> None:
                        default='present'),
             docker=dict(type=bool,
                         required=False,
-                        default=False)
+                        default=False),
+            fsid=dict(type='str', required=False)
         ),
         required_if=[['state', 'present', ['address']]]
     )
