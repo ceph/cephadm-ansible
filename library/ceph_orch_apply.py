@@ -40,6 +40,10 @@ version_added: "2.9"
 description:
     - apply a service spec
 options:
+    fsid:
+        description:
+            - the fsid of the Ceph cluster to interact with.
+        required: false
     spec:
         description:
             - The service spec to apply
@@ -77,6 +81,7 @@ def apply_spec(module: "AnsibleModule",
 def main():
     module = AnsibleModule(
         argument_spec=dict(
+            fsid=dict(type='str', required=False),
             spec=dict(type='str', required=True),
             docker=dict(type=bool,
                         required=False,
