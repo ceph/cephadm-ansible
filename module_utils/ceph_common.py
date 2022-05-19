@@ -23,6 +23,17 @@ def retry(exceptions, retries=20, delay=1):
     return decorator
 
 
+def build_base_cmd_sh(module: "AnsibleModule") -> List[str]:
+
+    cmd = ['cephadm', 'shell']
+
+    fsid = module.params.get('fsid')
+    if fsid:
+        cmd.extend(['--fsid', fsid])
+
+    return cmd
+
+
 def build_cmd(module: "AnsibleModule",
               cli_binary: bool,
               cmd: str) -> List[str]:
