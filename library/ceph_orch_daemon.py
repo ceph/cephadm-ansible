@@ -130,6 +130,7 @@ def main() -> None:
         module.exit_json(
             changed=False,
             stdout='',
+            cmd=[],
             stderr='',
             rc=0,
             start='',
