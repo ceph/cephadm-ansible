@@ -87,6 +87,7 @@ def main():
                         required=False,
                         default=False)
         ),
+        supports_check_mode=True
     )
 
     spec = module.params.get('spec')
@@ -94,29 +95,29 @@ def main():
     startd = datetime.datetime.now()
     changed = False
 
-    rc, cmd, out, err = apply_spec(module, spec)
-    changed = True
-
     if module.check_mode:
         exit_module(
             module=module,
             out='',
             rc=0,
-            cmd=cmd,
+            cmd=[],
             err='',
             startd=startd,
             changed=False
         )
-    else:
-        exit_module(
-            module=module,
-            out=out,
-            rc=rc,
-            cmd=cmd,
-            err=err,
-            startd=startd,
-            changed=changed
-        )
+
+    rc, cmd, out, err = apply_spec(module, spec)
+    changed = True
+
+    exit_module(
+        module=module,
+        out=out,
+        rc=rc,
+        cmd=cmd,
+        err=err,
+        startd=startd,
+        changed=changed
+    )
 
 
 if __name__ == '__main__':

@@ -161,7 +161,8 @@ def main() -> None:
                         default=False),
             fsid=dict(type='str', required=False)
         ),
-        required_if=[['state', 'present', ['address']]]
+        required_if=[['state', 'present', ['address']]],
+        supports_check_mode=True
     )
 
     name = module.params.get('name')
@@ -174,6 +175,17 @@ def main() -> None:
     changed = False
 
     cmd = ['cephadm']
+
+    if module.check_mode:
+        exit_module(
+            module=module,
+            out='',
+            rc=0,
+            cmd=[],
+            err='',
+            startd=startd,
+            changed=False
+        )
 
     rc, cmd, out, err = get_current_state(module)
     current_state = json.loads(out)
@@ -223,26 +235,15 @@ def main() -> None:
             rc, cmd, out, err = update_host(module, state, name)
             changed = True
 
-    if module.check_mode:
-        exit_module(
-            module=module,
-            out='',
-            rc=0,
-            cmd=cmd,
-            err='',
-            startd=startd,
-            changed=False
-        )
-    else:
-        exit_module(
-            module=module,
-            out=out,
-            rc=rc,
-            cmd=cmd,
-            err=err,
-            startd=startd,
-            changed=changed
-        )
+    exit_module(
+        module=module,
+        out=out,
+        rc=rc,
+        cmd=cmd,
+        err=err,
+        startd=startd,
+        changed=changed
+    )
 
 
 if __name__ == '__main__':
