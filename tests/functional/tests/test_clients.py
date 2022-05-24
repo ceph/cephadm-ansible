@@ -11,3 +11,11 @@ class TestClients(object):
     def test_ceph_keyring(self, node, host):
         assert host.file('/etc/ceph/ceph.keyring').exists
         assert host.file('/etc/ceph/ceph.keyring').mode == 0o600
+
+    @pytest.mark.client
+    def test_ceph_common_package_is_installed(self, node, host):
+        assert host.package("ceph-common").is_installed
+
+    @pytest.mark.client
+    def test_chrony_package_is_installed(self, node, host):
+        assert host.package("chrony").is_installed
