@@ -40,11 +40,11 @@ options:
               If 'stopped', it ensures the service is stopped.
               If 'restarted', it will restart the service.
         required: True
-    service_id:
+    daemon_id:
         description:
             - The id of the service.
         required: true
-    service_type:
+    daemon_type:
         description:
             - The type of the service.
         required: true
