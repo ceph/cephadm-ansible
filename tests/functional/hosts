@@ -1,10 +1,10 @@
 [ceph_cluster]
-ceph-node0
-ceph-node1
-ceph-node2
-ceph-node3
-ceph-node4
-ceph-node5
+ceph-node0 labels="['mons', 'mgrs', 'monitoring']"
+ceph-node1 labels="['mons', 'mgrs']"
+ceph-node2 labels="['mons', 'mgrs']"
+ceph-node3 labels="['rgws']"
+ceph-node4 labels="['osds']"
+ceph-node5 labels="['iscsigws']"
 
 [admin]
 ceph-node0
