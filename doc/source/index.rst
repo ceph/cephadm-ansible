@@ -229,6 +229,41 @@ keyring_dest
 **description**
   The full path name of the destination where the keyring will be copied on the remote host. (default: /etc/ceph/ceph.keyring)
 
+
+rocksdb-resharding
+==================
+
+This playbook reshards the rocksDB database for a given OSD.
+
+Usage::
+
+  ansible-playbook -i <inventory host file> rocksdb-resharding.yml -e osd_id=0 -e admin_node=ceph-mon0 -e rocksdb_sharding_parameters='m(3) p(3,0-12) O(3,0-13) L P'
+
+Options
++++++++
+
+fsid
+~~~~
+**description**
+  The fsid of the Ceph cluster.
+
+osd_id
+~~~~~~
+**description**
+  The id of the OSD where you want to reshard its corresponding rocksdb database.
+
+admin_node
+~~~~~~~~~~
+**description**
+  The name of a node with enough privileges to stop/start daemons via `cephadm shell ceph orch daemon` command.
+  (Usually the bootstrap node)
+
+rocksdb_sharding_parameters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**description**
+  The rocksdb sharding parameter to set. Default is 'm(3) p(3,0-12) O(3,0-13) L P'.
+
+
 Modules
 -------
 
