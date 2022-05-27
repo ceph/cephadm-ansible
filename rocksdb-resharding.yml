@@ -1,0 +1,112 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+# Author: Guillaume Abrioux <gabrioux@redhat.com>
+#
+# This playbook reshards the rocksDB database for a given OSD
+#
+# Usage:
+#
+# ansible-playbook -i <inventory host file> rocksdb-resharding.yml -e osd_id=0 -e admin_node=ceph-mon0
+#
+# Required run-time variables
+# ------------------
+# osd_id : the id of the OSD where you want to reshard its corresponding rocksdb database.
+# admin_node : the name of a node with enough privileges to stop/start
+#              daemons via `cephadm shell ceph orch daemon` command.
+#              (usually the bootstrap node).
+#
+# Optional run-time variables
+# ------------------
+# fsid : the fsid of the cluster.
+# rocksdb_sharding_parameters : the rocksdb sharding parameter to set. Default is 'm(3) p(3,0-12) O(3,0-13) L P'.
+# docker : bool to be set in order to use docker engine instead. Default is False.
+
+- hosts: localhost
+  become: true
+  gather_facts: false
+  tasks:
+    - name: fail if osd_id is not defined
+      fail:
+        msg: "you must provide 'osd_id' variable"
+      when: osd_id is undefined
+
+    - name: fail if admin_node is not defined
+      fail:
+        msg: "you must pass 'admin_node' variable"
+      when: admin_node is not defined
+
+    - name: test connectivity to admin node
+      ping:
+      delegate_to: "{{ admin_node }}"
+
+    - name: fail if osd_id isn't an id
+      fail:
+        msg: "osd_id must be an id"
+      when: not osd_id is regex('^\d+$')
+
+    - name: set_fact cephadm_cmd
+      set_fact:
+        cephadm_cmd: "cephadm {{ '--docker' if docker | default(False) | bool else '' }} shell ceph"
+
+    - name: get details about the osd daemon
+      delegate_to: "{{ admin_node }}"
+      block:
+        - name: get cluster fsid
+          command: "{{ cephadm_cmd }} fsid"
+          register: fsid
+          changed_when: false
+          when: fsid is not defined
+
+        - name: set_fact fsid
+          set_fact:
+            fsid: "{{ fsid.stdout }}"
+          when: fsid.stdout is defined
+
+        - name: get container image currently used by osd container
+          command: "{{ cephadm_cmd }} orch ps --daemon_type osd --daemon_id {{ osd_id }} --format json"
+          changed_when: false
+          register: ceph_orch_ps
+
+        - name: set_fact container_image, container_host
+          set_fact:
+            container_image: "{{ (ceph_orch_ps.stdout | from_json)[0]['container_image_name'] }}"
+            container_host: "{{ (ceph_orch_ps.stdout | from_json)[0]['hostname'] }}"
+
+        - name: stop the osd
+          ceph_orch_daemon:
+            fsid: "{{ fsid }}"
+            state: stopped
+            daemon_id: "{{ osd_id }}"
+            daemon_type: osd
+
+        - name: set_fact ceph_cmd
+          set_fact:
+            ceph_bluestore_tool_cmd: "{{ container_binary | default('podman') }} run --rm --privileged --entrypoint=ceph-bluestore-tool -v /var/run/ceph/{{ fsid }}:/var/run/ceph:z -v /var/log/ceph/{{ fsid }}:/var/log/ceph:z -v /var/lib/ceph/{{ fsid }}/crash:/var/lib/ceph/crash:z -v /var/lib/ceph/{{ fsid }}/osd.{{ osd_id }}:/var/lib/ceph/osd/ceph-{{ osd_id }}:z -v /var/lib/ceph/{{ fsid }}/osd.{{ osd_id }}/config:/etc/ceph/ceph.conf:z -v /dev:/dev -v /run/udev:/run/udev -v /sys:/sys -v /var/lib/ceph/{{ fsid }}/selinux:/sys/fs/selinux:ro -v /run/lvm:/run/lvm -v /run/lock/lvm:/run/lock/lvm {{ container_image }} --path /var/lib/ceph/osd/ceph-{{ osd_id }}"
+
+    - name: resharding operations
+      delegate_to: "{{ container_host }}"
+      block:
+        - name: check fs consistency with fsck before resharding
+          command: "{{ ceph_bluestore_tool_cmd }} fsck"
+          changed_when: false
+
+        - name: show current sharding
+          command: "{{ ceph_bluestore_tool_cmd }} show-sharding"
+          changed_when: false
+
+        - name: reshard
+          command: "{{ ceph_bluestore_tool_cmd }} --sharding=\"{{ rocksdb_sharding_parameters | default('m(3) p(3,0-12) O(3,0-13) L P') }}\" reshard"
+          changed_when: false
+
+        - name: check fs consistency with fsck after resharding
+          command: "{{ ceph_bluestore_tool_cmd }} fsck"
+          changed_when: false
+
+    - name: restart the osd
+      ceph_orch_daemon:
+        fsid: "{{ fsid }}"
+        state: started
+        daemon_id: "{{ osd_id }}"
+        daemon_type: osd
+      delegate_to: "{{ admin_node }}"

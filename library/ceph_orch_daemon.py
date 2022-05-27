@@ -40,11 +40,11 @@ options:
               If 'stopped', it ensures the service is stopped.
               If 'restarted', it will restart the service.
         required: True
-    service_id:
+    daemon_id:
         description:
             - The id of the service.
         required: true
-    service_type:
+    daemon_type:
         description:
             - The type of the service.
         required: true
@@ -143,7 +143,7 @@ def main() -> None:
 
     rc, cmd, out, err = get_current_state(module, daemon_type, daemon_id)
 
-    if rc:
+    if rc or not json.loads(out):
         fatal("Can't get current status of {}: {}".format(daemon_name, err), module)
 
     is_running = json.loads(out)[0]['status'] == 1
