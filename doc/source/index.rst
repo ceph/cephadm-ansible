@@ -263,6 +263,10 @@ rocksdb_sharding_parameters
 **description**
   The rocksdb sharding parameter to set. Default is 'm(3) p(3,0-12) O(3,0-13) L P'.
 
+docker
+~~~~~~
+  A boolean to be set in order to tell the playbook cephadm uses ``docker`` instead of ``podman`` as container engine. Default is ``False``.
+
 
 Modules
 -------
