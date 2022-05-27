@@ -20,6 +20,7 @@
 # ------------------
 # fsid : the fsid of the cluster.
 # rocksdb_sharding_parameters : the rocksdb sharding parameter to set. Default is 'm(3) p(3,0-12) O(3,0-13) L P'.
+# docker : bool to be set in order to use docker engine instead. Default is False.
 
 - hosts: localhost
   become: true
@@ -44,12 +45,15 @@
         msg: "osd_id must be an id"
       when: not osd_id is regex('^\d+$')
 
+    - name: set_fact cephadm_cmd
+      set_fact:
+        cephadm_cmd: "cephadm {{ '--docker' if docker | default(False) | bool else '' }} shell ceph"
 
     - name: get details about the osd daemon
       delegate_to: "{{ admin_node }}"
       block:
         - name: get cluster fsid
-          command: cephadm shell ceph fsid
+          command: "{{ cephadm_cmd }} fsid"
           register: fsid
           changed_when: false
           when: fsid is not defined
@@ -60,7 +64,7 @@
           when: fsid.stdout is defined
 
         - name: get container image currently used by osd container
-          command: "cephadm shell ceph orch ps --daemon_type osd --daemon_id {{ osd_id }} --format json"
+          command: "{{ cephadm_cmd }} orch ps --daemon_type osd --daemon_id {{ osd_id }} --format json"
           changed_when: false
           register: ceph_orch_ps
 
