@@ -149,6 +149,8 @@ def main() -> None:
     rc, cmd, out, err = get_current_state(module, daemon_type, daemon_id)
 
     if rc or not json.loads(out):
+        if not err:
+            err = 'osd id {} not found'.format(daemon_id)
         fatal("Can't get current status of {}: {}".format(daemon_name, err), module)
 
     is_running = json.loads(out)[0]['status'] == 1
