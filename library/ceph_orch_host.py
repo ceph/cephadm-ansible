@@ -49,6 +49,10 @@ options:
         description:
             - name of the host
         required: true
+    image:
+        description:
+            - The Ceph container image to use.
+        required: false
     address:
         description:
             - address of the host
@@ -159,7 +163,8 @@ def main() -> None:
             docker=dict(type=bool,
                         required=False,
                         default=False),
-            fsid=dict(type='str', required=False)
+            fsid=dict(type='str', required=False),
+            image=dict(type='str', required=False)
         ),
         required_if=[['state', 'present', ['address']]],
         supports_check_mode=True
