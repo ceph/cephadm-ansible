@@ -44,6 +44,10 @@ options:
         description:
             - the fsid of the Ceph cluster to interact with.
         required: false
+    image:
+        description:
+            - The Ceph container image to use.
+        required: false
     spec:
         description:
             - The service spec to apply
@@ -85,7 +89,8 @@ def main():
             spec=dict(type='str', required=True),
             docker=dict(type=bool,
                         required=False,
-                        default=False)
+                        default=False),
+            image=dict(type='str', required=False)
         ),
         supports_check_mode=True
     )
