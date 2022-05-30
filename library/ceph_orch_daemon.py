@@ -33,6 +33,10 @@ options:
         description:
             - the fsid of the Ceph cluster to interact with.
         required: false
+    image:
+        description:
+            - The Ceph container image to use.
+        required: false
     state:
         description:
             - The desired state of the service specified in 'name'.
@@ -115,7 +119,8 @@ def main() -> None:
             docker=dict(type=bool,
                         required=False,
                         default=False),
-            fsid=dict(type='str', required=False)
+            fsid=dict(type='str', required=False),
+            image=dict(type='str', required=False)
         ),
         supports_check_mode=True,
     )
