@@ -1,0 +1,73 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+# Author: Guillaume Abrioux <gabrioux@redhat.com>
+#
+# This playbook copies an SSH public key to a specified user on remote hosts.
+#
+# Required run-time variables
+# ------------------
+# admin_node : The name of a node with enough privileges to call `cephadm get-pub-key` command.
+#              (usually the bootstrap node).
+#
+# Optional run-time variables
+# ------------------
+# fsid : The fsid of the Ceph cluster.
+# cephadm_ssh_user : ssh username on remote hosts.
+# cephadm_pubkey_path : Full path name of the ssh public key file *on the ansible controller host*.
+#                       If not passed, the playbook will assume it has to get the key from `cephadm get-pub-key` command.
+#
+# Example
+# -------
+# ansible-playbook -i hosts cephadm-distribute-ssh-key.yml -e cephadm_ssh_user=foo -e cephadm_pubkey_path=/home/cephadm/ceph.key -e admin_node=ceph-node0
+#
+# ansible-playbook -i hosts cephadm-distribute-ssh-key.yml -e cephadm_ssh_user=foo -e admin_node=ceph-node0
+
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: fail if admin_node is not defined
+      fail:
+        msg: "You must set the variable admin_node"
+      run_once: true
+      delegate_to: localhost
+      when: admin_node is undefined
+
+    - name: get ssh public key from a file on the Ansible controller host
+      when: cephadm_pubkey_path is defined
+      block:
+        - name: get details about {{ cephadm_pubkey_path }}
+          stat:
+            path: "{{ cephadm_pubkey_path }}"
+          register: cephadm_pubkey_path_stat
+          delegate_to: localhost
+          run_once: true
+
+        - name: fail if {{ cephadm_pubkey_path }} doesn't exist
+          fail:
+            msg: "{{ cephadm_pubkey_path }} doesn't exist or is invalid."
+          run_once: true
+          delegate_to: localhost
+          when:
+            - not cephadm_pubkey_path_stat.stat.exists | bool
+              or not cephadm_pubkey_path_stat.stat.isfile | bool
+
+    - name: get the cephadm ssh pub key
+      command: "cephadm shell {{ '--fsid ' + fsid if fsid is defined else '' }} ceph cephadm get-pub-key"
+      changed_when: false
+      run_once: true
+      register: cephadm_get_pub_key
+      delegate_to: "{{ admin_node }}"
+      when: cephadm_pubkey_path is undefined
+
+    - name: allow ssh public key for {{ cephadm_ssh_user | default('root') }} account
+      authorized_key:
+        user: "{{ cephadm_ssh_user | default('root') }}"
+        key: "{{ lookup('file', cephadm_pubkey_path) if cephadm_pubkey_path is defined else cephadm_get_pub_key.stdout }}"
+
+    - name: set cephadm ssh user to {{ cephadm_ssh_user }}
+      command: "cephadm shell {{ '--fsid ' + fsid if fsid is defined else '' }} ceph cephadm set-user {{ cephadm_ssh_user | default('root') }}"
+      changed_when: false
+      run_once: true
+      delegate_to: "{{ admin_node }}"
