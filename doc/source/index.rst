@@ -168,6 +168,43 @@ custom_repo_gpgkey
 **description**
   The url of the gpg key corresponding to the repository set in ``custom_repo_url`` when ``ceph_origin`` is 'custom'.
 
+cephadm-distribute-ssh-key
+==========================
+
+This playbook distributes an SSH public key over all hosts present in the inventory.
+The key to be copied will be read from a file specified at the path defined in ``cephadm_pubkey_path`` **from the Ansible controller host**.
+If ``cephadm_pubkey_path`` is unset, the playbook will assume it is supposed to get it from the command ``cephadm get-pub-key``.
+
+Usage::
+
+  ansible-playbook -i <inventory host file> cephadm-distribute-ssh-key.yml -e admin_node=ceph-node01 -e cephadm_pubkey_path=/home/cephadm/ceph.key
+
+Options
++++++++
+
+fsid
+~~~~
+**description**
+  The fsid of the Ceph cluster.
+
+admin_node
+~~~~~~~~~~
+**description**
+  The name of a node with enough privileges to call `cephadm get-pub-key` command.
+  (usually the bootstrap node).
+
+cephadm_ssh_user
+~~~~~~~~~~~~~~~~
+**description**
+  The ssh username on remote hosts that will be used by ``cephadm``.
+
+cephadm_pubkey_path
+~~~~~~~~~~~~~~~~~~~
+**description**
+  Full path name of the ssh public key file **on the ansible controller host**.
+
+
+
 cephadm-purge
 =============
 
