@@ -29,9 +29,7 @@
       when: delegate_facts_host | bool
 
     - name: container registry authentication
-      ceph_orch:
-        cli_binary: true
-        command: "cephadm registry-login --registry-url {{ ceph_container_registry }} --registry-username {{ ceph_container_registry_username }} --registry-password {{ ceph_container_registry_password }}"
+      command: "cephadm registry-login --registry-url {{ ceph_container_registry }} --registry-username {{ ceph_container_registry_username }} --registry-password {{ ceph_container_registry_password }}"
       changed_when: false
       environment:
         HTTP_PROXY: "{{ ceph_container_http_proxy | default('') }}"
@@ -78,9 +76,7 @@
         key: '{{ cephadm_pubpkey.stdout }}'
 
     - name: run cephadm prepare-host
-      ceph_orch:
-        cli_binary: true
-        command: cephadm prepare-host
+      command: cephadm prepare-host
       changed_when: false
 
     - name: add hosts
@@ -109,8 +105,7 @@
             label: mons
 
     - name: waiting for the monitor to join the quorum...
-      ceph_orch:
-        command: "quorum_status --format json"
+      command: cephadm shell ceph quorum_status --format json
       register: ceph_health_raw
       changed_when: false
       until: (ceph_health_raw.stdout | from_json)["quorum_names"] | length == groups.get('mons', []) | length
@@ -118,8 +113,7 @@
       delay: "{{ health_mon_check_delay }}"
 
     - name: update the placement of manager hosts
-      ceph_orch:
-        command: "orch apply mgr --placement=label:mgrs"
+      command: cephadm shell ceph orch apply mgr --placement=label:mgrs"
 
     - name: update the placement of osd hosts
       ceph_orch_apply:
@@ -141,8 +135,7 @@
             host_pattern: '*'
 
     - name: enable the monitoring
-      ceph_orch:
-        command: "{{ item }}"
+      command: "ceph {{ item }}"
       changed_when: false
       loop:
         - "mgr module enable prometheus"
