@@ -58,6 +58,8 @@ def build_base_cmd(module: "AnsibleModule"):
 
     if module.params.get('docker'):
         cmd.append('--docker')
+    if module.params.get('image'):
+        cmd.extend(['--image', module.params.get('image')])
     cmd.append('shell')
     if fsid:
         cmd.extend(['--fsid', fsid])

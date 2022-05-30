@@ -32,6 +32,10 @@ options:
         description:
             - the fsid of the Ceph cluster to interact with.
         required: false
+    image:
+        description:
+            - The Ceph container image to use.
+        required: false
     action:
         description:
             - whether to get or set the parameter specified in 'option'
@@ -100,7 +104,8 @@ def main() -> None:
             action=dict(type='str', required=False, choices=['get', 'set'], default='set'),
             option=dict(type='str', required=True),
             value=dict(type='str', required=False),
-            fsid=dict(type='str', required=False)
+            fsid=dict(type='str', required=False),
+            image=dict(type='str', required=False)
         ),
         supports_check_mode=True,
         required_if=[['action', 'set', ['value']]]
