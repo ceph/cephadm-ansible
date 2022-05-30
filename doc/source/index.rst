@@ -328,6 +328,8 @@ ceph_orch_host
 
 ``fsid``
   The fsid of the Ceph cluster to interact with.
+``image``
+  Ceph container image.
 ``name``
   name of the host to be added/removed/updated.
 ``address``
@@ -347,6 +349,8 @@ ceph_config
 
 ``fsid``
   The fsid of the Ceph cluster to interact with.
+``image``
+  Ceph container image.
 ``action``
   Whether to get or set the parameter specified in 'option'.
 ``who``
@@ -361,6 +365,8 @@ ceph_orch_apply
 
 ``fsid``
   The fsid of the Ceph cluster to interact with.
+``image``
+  Ceph container image.
 ``spec``
   The service spec to apply.
 
@@ -370,6 +376,8 @@ ceph_orch_daemon
 
 ``fsid``
   The fsid of the Ceph cluster to interact with.
+``image``
+  Ceph container image.
 ``state``
   The desired state of the service specified in 'name'.
   If 'started', it ensures the service is started.
