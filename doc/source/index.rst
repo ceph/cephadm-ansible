@@ -444,7 +444,7 @@ Bootstrap and add some hosts::
    # cat site.yml
    ---
    - name: bootstrap the cluster
-     hosts: ceph-node01
+     hosts: ceph-mon1
      become: true
      gather_facts: false
      tasks:
@@ -465,7 +465,7 @@ Bootstrap and add some hosts::
          delegate_to: ceph-mon1
 
    - name: deploy osd service
-     hosts: ceph-node01
+     hosts: ceph-mon1
      become: true
      gather_facts: false
      tasks:
@@ -481,7 +481,7 @@ Bootstrap and add some hosts::
                 all: true
 
    - name: change osd_default_notify_timeout option
-     hosts: ceph-node01
+     hosts: ceph-mon1
      become: true
      gather_facts: false
      tasks:
@@ -493,7 +493,7 @@ Bootstrap and add some hosts::
            value: 20
 
 
-.. note:: You may have noticed that most of the time, the target node in the different plays in the playbook above is ``ceph-node01``, which is the bootstrap node.
+.. note:: You may have noticed that most of the time, the target node in the different plays in the playbook above is ``ceph-mon1``, which is the bootstrap node.
 
 Upcoming changes
 ----------------
