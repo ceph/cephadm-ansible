@@ -4,12 +4,12 @@ Introduction
 ------------
 
 cephadm-ansible is a collection of Ansible modules and playbooks to simplify
-workflows that are not covered by [cephadm]_. The following workflows are covered
-by three playbooks:
+workflows that are not covered by [cephadm]_. They are covered by the following playbooks:
 
 * cephadm-preflight.yml: Initial setup of hosts before bootstrapping the cluster
 * cephadm-clients.yml: Setting up client hosts
 * cephadm-purge-cluster.yml: Remove a Ceph cluster
+* cephadm-distribute-ssh-key.yml: Distribute a SSH public key to all hosts
 
 Additionnally, several ansible modules are provided in order to let people writing their own playbooks.
 
