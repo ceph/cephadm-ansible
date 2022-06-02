@@ -29,8 +29,10 @@
       when: delegate_facts_host | bool
 
     - name: container registry authentication
-      command: "cephadm registry-login --registry-url {{ ceph_container_registry }} --registry-username {{ ceph_container_registry_username }} --registry-password {{ ceph_container_registry_password }}"
-      changed_when: false
+      cephadm_registry_login:
+        registry_url: "{{ ceph_container_registry }}"
+        registry_username: "{{ ceph_container_registry_username }}"
+        registry_password: "{{ ceph_container_registry_password }}"
       environment:
         HTTP_PROXY: "{{ ceph_container_http_proxy | default('') }}"
         HTTPS_PROXY: "{{ ceph_container_https_proxy | default('') }}"
