@@ -34,24 +34,6 @@ def build_base_cmd_sh(module: "AnsibleModule") -> List[str]:
     return cmd
 
 
-def build_cmd(module: "AnsibleModule",
-              cli_binary: bool,
-              cmd: str) -> List[str]:
-
-    _cmd = []
-    fsid = module.params.get('fsid')
-
-    if not cli_binary:
-        _cmd.extend(['cephadm', 'shell'])
-        if fsid:
-            _cmd.extend(['--fsid', fsid])
-        _cmd.append('ceph')
-
-    _cmd.extend(cmd.split(' '))
-
-    return _cmd
-
-
 def build_base_cmd(module: "AnsibleModule"):
     cmd = ['cephadm']
     fsid = module.params.get('fsid')
