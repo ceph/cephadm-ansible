@@ -8,9 +8,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import retry, exit_module, build_base_cmd, fatal  # type: ignore
+    from ansible.module_utils.ceph_common import retry, exit_module, build_base_cmd_orch, fatal  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import retry, exit_module, build_base_cmd, fatal  # type: ignore
+    from module_utils.ceph_common import retry, exit_module, build_base_cmd_orch, fatal  # type: ignore
 
 import datetime
 import json
@@ -77,7 +77,7 @@ RETURN = '''#  '''
 def get_current_state(module: "AnsibleModule",
                       daemon_type: str,
                       daemon_id: str) -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd(module)
+    cmd = build_base_cmd_orch(module)
     cmd.extend(['ps', '--daemon_type',
                 daemon_type, '--daemon_id',
                 daemon_id, '--format', 'json',
@@ -90,7 +90,7 @@ def get_current_state(module: "AnsibleModule",
 def update_daemon_status(module: "AnsibleModule",
                          action: str,
                          daemon_name: str) -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd(module)
+    cmd = build_base_cmd_orch(module)
     cmd.extend(['daemon', action, daemon_name])
     rc, out, err = module.run_command(cmd)
 
