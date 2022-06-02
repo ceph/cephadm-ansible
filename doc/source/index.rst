@@ -486,6 +486,18 @@ ceph_orch_daemon
 ``service_type``
   The type of the service.
 
+cephadm_registry_login
+++++++++++++++++++++++
+
+``state``
+  Whether the module should log in to the registry or log out.
+``registry_url``
+  The container registry to log in or log out.
+``registry_username``
+  The username to log in to the container registry.
+``registry_password``
+  The corresponding password to be used with ``registry_username``.
+
 Samples
 =======
 
@@ -509,6 +521,13 @@ Bootstrap and add some hosts::
      become: true
      gather_facts: false
      tasks:
+       - name: login to quay.io registry
+         cephadm_registry_login:
+           state: login
+           registry_url: quay.io
+           registry_username: foo
+           registry_password: b4r
+
        - name: bootstrap initial cluster
          cephadm_bootstrap:
            mon_ip: "{{ monitor_address }}"
