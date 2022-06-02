@@ -20,9 +20,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_orch  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module, build_base_cmd
+    from module_utils.ceph_common import exit_module, build_base_cmd_orch
 import datetime
 
 
@@ -72,7 +72,7 @@ EXAMPLES = '''
 
 def apply_spec(module: "AnsibleModule",
                data: str) -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd(module)
+    cmd = build_base_cmd_orch(module)
     cmd.extend(['apply', '-i', '-'])
     rc, out, err = module.run_command(cmd, data=data)
 

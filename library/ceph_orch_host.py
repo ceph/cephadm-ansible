@@ -20,9 +20,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_orch  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module, build_base_cmd
+    from module_utils.ceph_common import exit_module, build_base_cmd_orch
 import datetime
 import json
 
@@ -105,7 +105,7 @@ EXAMPLES = '''
 
 
 def get_current_state(module: "AnsibleModule") -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd(module)
+    cmd = build_base_cmd_orch(module)
     cmd.extend(['host', 'ls', '--format', 'json'])
     rc, out, err = module.run_command(cmd)
 
@@ -119,7 +119,7 @@ def update_label(module: "AnsibleModule",
                  action: str,
                  host: str,
                  label: str = '') -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd(module)
+    cmd = build_base_cmd_orch(module)
     cmd.extend(['host', 'label', action,
                 host, label])
     rc, out, err = module.run_command(cmd)
@@ -135,7 +135,7 @@ def update_host(module: "AnsibleModule",
                 name: str,
                 address: str = '',
                 labels: List[str] = None) -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd(module)
+    cmd = build_base_cmd_orch(module)
     cmd.extend(['host', action, name])
     if action == 'add':
         cmd.append(address)

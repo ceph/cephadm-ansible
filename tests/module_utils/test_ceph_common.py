@@ -9,32 +9,27 @@ class TestCephCommon(object):
         self.fake_params = {'foo': 'bar'}
         self.fake_module.params = self.fake_params
 
-    def test_build_base_cmd_with_fsid_arg(self):
+    def test_build_base_cmd_orch_with_fsid_arg(self):
         expected_cmd = ['cephadm', 'shell', '--fsid', '123', 'ceph', 'orch']
         self.fake_module.params = {'fsid': '123'}
-        cmd = ceph_common.build_base_cmd(self.fake_module)
+        cmd = ceph_common.build_base_cmd_orch(self.fake_module)
         assert cmd == expected_cmd
 
-    def test_build_base_cmd_with_image_arg(self):
+    def test_build_base_cmd_orch_with_image_arg(self):
         expected_cmd = ['cephadm', '--image', 'quay.io/ceph-ci/ceph:main', 'shell', 'ceph', 'orch']
         self.fake_module.params = {'image': 'quay.io/ceph-ci/ceph:main'}
-        cmd = ceph_common.build_base_cmd(self.fake_module)
+        cmd = ceph_common.build_base_cmd_orch(self.fake_module)
         assert cmd == expected_cmd
 
-    def test_build_base_cmd_with_docker_arg(self):
+    def test_build_base_cmd_orch_with_docker_arg(self):
         expected_cmd = ['cephadm', '--docker', 'shell', 'ceph', 'orch']
         self.fake_module.params = {'docker': True}
-        cmd = ceph_common.build_base_cmd(self.fake_module)
+        cmd = ceph_common.build_base_cmd_orch(self.fake_module)
         assert cmd == expected_cmd
 
-    def test_build_base_cmd_no_arg(self):
+    def test_build_base_cmd_orch_no_arg(self):
         expected_cmd = ['cephadm', 'shell', 'ceph', 'orch']
-        cmd = ceph_common.build_base_cmd(self.fake_module)
-        assert cmd == expected_cmd
-
-    def test_build_base_cmd_sh_no_arg(self):
-        expected_cmd = ['cephadm', 'shell']
-        cmd = ceph_common.build_base_cmd_sh(self.fake_module)
+        cmd = ceph_common.build_base_cmd_orch(self.fake_module)
         assert cmd == expected_cmd
 
     def test_fatal(self):
