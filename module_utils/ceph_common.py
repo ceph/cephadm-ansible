@@ -34,7 +34,7 @@ def build_base_cmd_sh(module: "AnsibleModule") -> List[str]:
     return cmd
 
 
-def build_base_cmd(module: "AnsibleModule"):
+def build_base_cmd(module: "AnsibleModule") -> List[str]:
     cmd = ['cephadm']
     fsid = module.params.get('fsid')
 
