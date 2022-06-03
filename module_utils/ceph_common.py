@@ -23,28 +23,33 @@ def retry(exceptions, retries=20, delay=1):
     return decorator
 
 
-def build_base_cmd_sh(module: "AnsibleModule") -> List[str]:
+def build_base_cmd(module: "AnsibleModule") -> List[str]:
+    cmd = ['cephadm']
+    docker = module.params.get('docker')
+    image = module.params.get('image')
 
-    cmd = ['cephadm', 'shell']
+    if docker:
+        cmd.append('--docker')
+    if image:
+        cmd.extend(['--image', image])
 
+    return cmd
+
+
+def build_base_cmd_shell(module: "AnsibleModule") -> List[str]:
+    cmd = build_base_cmd(module)
     fsid = module.params.get('fsid')
+
+    cmd.append('shell')
+
     if fsid:
         cmd.extend(['--fsid', fsid])
 
     return cmd
 
 
-def build_base_cmd(module: "AnsibleModule"):
-    cmd = ['cephadm']
-    fsid = module.params.get('fsid')
-
-    if module.params.get('docker'):
-        cmd.append('--docker')
-    if module.params.get('image'):
-        cmd.extend(['--image', module.params.get('image')])
-    cmd.append('shell')
-    if fsid:
-        cmd.extend(['--fsid', fsid])
+def build_base_cmd_orch(module: "AnsibleModule") -> List[str]:
+    cmd = build_base_cmd_shell(module)
     cmd.extend(['ceph', 'orch'])
 
     return cmd
