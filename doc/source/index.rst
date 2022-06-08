@@ -157,16 +157,69 @@ ceph_dev_sha1
 **default**
   "latest"
 
-custom_repo_url
-~~~~~~~~~~~~~~~
+ceph_custom_repositories
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This variable is a list, the following options can be specified for each element that represents a repository to be set up:
+
+name
+####
 **description**
-  The url of the repository when ``ceph_origin`` is 'custom'.
+  The name of the repository.
+
+gpgkey
+######
+**description**
+  The url of the gpg key corresponding to the repository being set up.
+
+gpgcheck
+########
+**description**
+  Whether gpgcheck has to be performed.
+
+state
+#####
+**description**
+  Whether this repository has to be present or absent. (Default: present)
+
+description
+###########
+**description**
+  A short repository description
+
+baseurl
+#######
+**description**
+  The url of the repository pointing to the location where 'repodata' directory lives.
+
+file
+####
+**description**
+  The filename Ansible will use to write the repository file.
+
+priority
+########
+**description**
+  The priority of this repository.
 
 
-custom_repo_gpgkey
-~~~~~~~~~~~~~~~~~~
-**description**
-  The url of the gpg key corresponding to the repository set in ``custom_repo_url`` when ``ceph_origin`` is 'custom'.
+Example::
+
+  ceph_custom_repositories:
+    - name: ceph_custom_noarch
+      state: present
+      description: Ceph custom repo noarch
+      gpgcheck: 'no'
+      baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/noarch
+      file: ceph_shaman_build_noarch
+      priority: '2'
+    - name: ceph_custom_x86_64
+      state: present
+      description: Ceph custom repo x86_64
+      gpgcheck: 'no'
+      baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/x86_64
+      file: ceph_shaman_build_x86_64
+      priority: '2'
 
 cephadm-distribute-ssh-key
 ==========================
