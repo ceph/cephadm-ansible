@@ -28,9 +28,10 @@
 
     - name: fail when ceph_origin is custom with no repository defined
       fail:
-        msg: "You must define 'ceph_custom_repositories' when ceph_origin is 'custom'"
+        msg: "You must define 'ceph_custom_repositories' or 'custom_repo_url' when ceph_origin is 'custom'"
       when:
         - ceph_origin == 'custom'
+        - custom_repo_url is undefined
         - ceph_custom_repositories is undefined
 
     - name: redhat family of OS related tasks
@@ -118,6 +119,19 @@
         - name: enable custom repo
           when: ceph_origin == 'custom'
           block:
+            - name: set_fact ceph_custom_repositories
+              set_fact:
+                ceph_custom_repositories:
+                  - name: ceph_custom
+                    description: Ceph custom repo
+                    gpgcheck: "{{ 'yes' if custom_repo_gpgkey is defined else 'no' }}"
+                    state: present
+                    gpgkey: "{{ custom_repo_gpgkey | default(omit) }}"
+                    baseurl: "{{ custom_repo_url }}"
+                    file: ceph_custom
+                    priority: '2'
+              when: ceph_custom_repositories is undefined
+
             - name: setup custom repositories
               yum_repository:
                 name: "{{ item.name }}"
