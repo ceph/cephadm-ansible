@@ -157,10 +157,18 @@ ceph_dev_sha1
 **default**
   "latest"
 
+custom_repo_url
+~~~~~~~~~~~~~~~
+**description**
+  The url of the repository when ``ceph_origin`` is 'custom'.
+  Mutually exclusive with ``ceph_custom_repositories``.
+
 ceph_custom_repositories
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-This variable is a list, the following options can be specified for each element that represents a repository to be set up:
+This variable is a list.
+Mutually exclusive with ``custom_repo_url``.
+The following options can be specified for each element that represents a repository to be set up:
 
 name
 ####
