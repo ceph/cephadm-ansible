@@ -419,6 +419,8 @@ cephadm_bootstrap
   SSH user used for cephadm ssh to the hosts.
 ``ssh_config``
   SSH config file path for cephadm ssh client.
+``allow_fqdn_hostname``
+  Allow hostname that is fully-qualified.
 
 
 ceph_orch_host
