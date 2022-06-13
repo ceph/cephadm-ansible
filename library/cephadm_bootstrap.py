@@ -112,6 +112,11 @@ options:
         description:
             - SSH config file path for cephadm ssh client.
         required: false
+    allow_fqdn_hostname:
+        description:
+            - Allow hostname that is fully-qualified.
+        required: false
+        default: false
 author:
     - Dimitri Savineau <dsavinea@redhat.com>
 '''
@@ -160,6 +165,7 @@ def main() -> None:
             registry_json=dict(type='path', require=False),
             ssh_user=dict(type='str', required=False),
             ssh_config=dict(type='str', required=False),
+            allow_fqdn_hostname=dict(type='bool', required=False, default=False)
         ),
         supports_check_mode=True,
         mutually_exclusive=[
@@ -189,6 +195,7 @@ def main() -> None:
     registry_json = module.params.get('registry_json')
     ssh_user = module.params.get('ssh_user')
     ssh_config = module.params.get('ssh_config')
+    allow_fqdn_hostname = module.params.get('allow_fqdn_hostname')
 
     startd = datetime.datetime.now()
 
@@ -269,6 +276,9 @@ def main() -> None:
 
     if ssh_config:
         cmd.extend(['--ssh-config', ssh_config])
+
+    if allow_fqdn_hostname:
+        cmd.append('--allow-fqdn-hostname')
 
     if module.check_mode:
         exit_module(
