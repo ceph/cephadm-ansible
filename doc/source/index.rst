@@ -20,7 +20,7 @@ Terminology
 -----------
 
 **admin host**
-  A host where the admin keyring and ceph config file is present. Although the admin host and the bootstrap host are usually the same host, it is possible to have multiple admin hosts later.
+  A host where the admin keyring and ceph config file are present. Although the admin host and the bootstrap host are usually the same host, it is possible to have multiple admin hosts later.
   ``cephadm`` will make a host become 'admin' when the label ``_admin`` is added to that host. (ie: ``ceph orch host label add <host> _admin``).
   This hosts should be present in the group ``[admin]`` in the ansible inventory.
   If for some reason you decide a host shouldn't be a 'admin host' anymore, you have to :
