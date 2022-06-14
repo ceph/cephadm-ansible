@@ -1,0 +1,22 @@
+pull_request_rules:
+# Backports
+  - actions:
+      backport:
+        branches:
+          - quincy
+    conditions:
+      - label=backport-quincy
+    name: backport quincy
+  - actions:
+      backport:
+        branches:
+          - pacific
+    conditions:
+      - label=backport-pacific
+    name: backport pacific
+commands_restrictions:
+  backport:
+    conditions:
+      - base=devel
+      - number<0
+
