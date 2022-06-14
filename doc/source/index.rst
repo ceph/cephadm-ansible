@@ -557,7 +557,8 @@ Bootstrap and add some hosts::
             service_type: osd
             service_id: osd
               placement:
-            label: osd
+                host_pattern: '*'
+                label: osd
             spec:
               data_devices:
                 all: true
