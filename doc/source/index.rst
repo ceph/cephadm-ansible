@@ -462,6 +462,8 @@ cephadm_bootstrap
   SSH config file path for cephadm ssh client.
 ``allow_fqdn_hostname``
   Allow hostname that is fully-qualified.
+``cluster_network``
+  Subnet to use for cluster replication, recovery and heartbeats.
 
 
 ceph_orch_host
