@@ -117,6 +117,10 @@ options:
             - Allow hostname that is fully-qualified.
         required: false
         default: false
+    cluster_network:
+        description:
+            - subnet to use for cluster replication, recovery and heartbeats.
+        required: false
 author:
     - Dimitri Savineau <dsavinea@redhat.com>
 '''
@@ -165,7 +169,8 @@ def main() -> None:
             registry_json=dict(type='path', require=False),
             ssh_user=dict(type='str', required=False),
             ssh_config=dict(type='str', required=False),
-            allow_fqdn_hostname=dict(type='bool', required=False, default=False)
+            allow_fqdn_hostname=dict(type='bool', required=False, default=False),
+            cluster_network=dict(type='str', required=False),
         ),
         supports_check_mode=True,
         mutually_exclusive=[
@@ -196,6 +201,7 @@ def main() -> None:
     ssh_user = module.params.get('ssh_user')
     ssh_config = module.params.get('ssh_config')
     allow_fqdn_hostname = module.params.get('allow_fqdn_hostname')
+    cluster_network = module.params.get('cluster_network')
 
     startd = datetime.datetime.now()
 
@@ -279,6 +285,9 @@ def main() -> None:
 
     if allow_fqdn_hostname:
         cmd.append('--allow-fqdn-hostname')
+
+    if cluster_network:
+        cmd.extend(['--cluster-network', cluster_network])
 
     if module.check_mode:
         exit_module(
