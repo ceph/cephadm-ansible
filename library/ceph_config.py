@@ -8,9 +8,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_shell  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_shell, fatal  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module, build_base_cmd_shell  # type: ignore
+    from module_utils.ceph_common import exit_module, build_base_cmd_shell, fatal  # type: ignore
 
 import datetime
 
@@ -90,7 +90,10 @@ def get_or_set_option(module: "AnsibleModule",
                       option: str,
                       value: str) -> Tuple[int, List[str], str, str]:
     cmd = build_base_cmd_shell(module)
-    cmd.extend(['ceph', 'config', 'get', who, option])
+    cmd.extend(['ceph', 'config', action, who, option])
+
+    if action == 'set':
+        cmd.append(value)
 
     rc, out, err = module.run_command(cmd)
 
@@ -133,9 +136,11 @@ def main() -> None:
     changed = False
 
     rc, cmd, out, err = get_or_set_option(module, 'get', who, option, value)
+    if rc:
+        fatal(message=f"Can't get current value. who={who} option={option}", module=module)
 
     if action == 'set':
-        if value == out:
+        if value.lower() == out:
             out = 'who={} option={} value={} already set. Skipping.'.format(who, option, value)
         else:
             rc, cmd, out, err = get_or_set_option(module, action, who, option, value)
