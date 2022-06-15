@@ -119,6 +119,47 @@ ceph_origin
   Community repository (https://download.ceph.com)
 ``custom``
   Custom repository.
+  When ``ceph_origin: custom`` is defined, you have to set the variable ``custom_repo_url`` with the URL of your repository.
+  It also supports deploying multiple repositories, in that case you must set the variable ``ceph_custom_repositories`` instead.
+  ``ceph_custom_repositories`` is a dictionnary that should look like following::
+
+    ceph_custom_repositories:
+      - name: ceph_custom_noarch
+        state: present
+        description: Ceph custom repo noarch
+        gpgcheck: 'no'
+        baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/noarch
+        file: ceph_shaman_build_noarch
+        priority: '2'
+      - name: ceph_custom_x86_64
+        state: present
+        description: Ceph custom repo x86_64
+        gpgcheck: 'no'
+        baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/x86_64
+        file: ceph_shaman_build_x86_64
+        priority: '2'
+
+  Given that the definition is more complex, you might want to define it as a group_vars/host_vars rather than as an extra-var::
+
+    $ cat group_vars/all
+    ---
+    ceph_custom_repositories:
+      - name: ceph_custom_noarch
+        state: present
+        description: Ceph custom repo noarch
+        gpgcheck: 'no'
+        baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/noarch
+        file: ceph_shaman_build_noarch
+        priority: '2'
+      - name: ceph_custom_x86_64
+        state: present
+        description: Ceph custom repo x86_64
+        gpgcheck: 'no'
+        baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/x86_64
+        file: ceph_shaman_build_x86_64
+        priority: '2'
+
+
 ``shaman``
   Devel repository.
 
