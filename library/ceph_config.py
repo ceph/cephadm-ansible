@@ -8,9 +8,9 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_sh  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_shell  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module, build_base_cmd_sh  # type: ignore
+    from module_utils.ceph_common import exit_module, build_base_cmd_shell  # type: ignore
 
 import datetime
 
@@ -89,7 +89,7 @@ def get_or_set_option(module: "AnsibleModule",
                       who: str,
                       option: str,
                       value: str) -> Tuple[int, List[str], str, str]:
-    cmd = build_base_cmd_sh(module)
+    cmd = build_base_cmd_shell(module)
     cmd.extend(['ceph', 'config', 'get', who, option])
 
     rc, out, err = module.run_command(cmd)
