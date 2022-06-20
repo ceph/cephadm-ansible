@@ -528,9 +528,9 @@ ceph_orch_daemon
   If 'started', it ensures the service is started.
   If 'stopped', it ensures the service is stopped.
   If 'restarted', it will restart the service.
-``service_id``
+``daemon_id``
   The id of the service.
-``service_type``
+``daemon_type``
   The type of the service.
 
 cephadm_registry_login
