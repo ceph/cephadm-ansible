@@ -137,7 +137,24 @@
         - "orch apply prometheus --placement=label:monitoring"
         - "orch apply node-exporter --placement=*"
 
+- name: remove ceph-node5
+  hosts: "{{ groups.get('mons')[0] }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: drain ceph-node5
+      ceph_orch_host:
+        state: drain
+        name: ceph-node5
 
+    - name: remove ceph-node5
+      ceph_orch_host:
+        state: absent
+        name: ceph-node5
+      retries: 20
+      delay: 1
+      until: result is succeeded
+      register: result
 # TODO(guits): address the following tasks:
     # - name: show ceph orchestrator services
     #   command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
