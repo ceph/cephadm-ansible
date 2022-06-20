@@ -175,6 +175,8 @@ def main() -> None:
     set_admin_label = module.params.get('set_admin_label')
     labels = module.params.get('labels')
     state = module.params.get('state')
+    if state == 'absent':
+        state = 'rm'
 
     startd = datetime.datetime.now()
     changed = False
@@ -233,7 +235,7 @@ def main() -> None:
             if not rc:
                 changed = True
 
-    if state in ['absent', 'drain']:
+    if state in ['rm', 'drain']:
         if name not in current_names:
             out = '{} is not present, skipping.'.format(name)
         else:
