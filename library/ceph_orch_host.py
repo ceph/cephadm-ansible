@@ -199,10 +199,10 @@ def main() -> None:
     current_names = [name['hostname'] for name in current_state]
 
     if state == 'present':
+        if set_admin_label:
+            labels.append('_admin')
         if name in current_names:
             current_state_host = [host for host in current_state if host['hostname'] == name][0]
-            if set_admin_label:
-                labels.append('_admin')
             if labels:
                 differences = set(labels) ^ set(current_state_host['labels'])
                 if differences:
