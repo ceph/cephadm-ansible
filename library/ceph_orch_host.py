@@ -155,7 +155,7 @@ def main() -> None:
             name=dict(type='str', required=True),
             address=dict(type='str', required=False),
             set_admin_label=dict(type=bool, required=False, default=False),
-            labels=dict(type=list, required=False, default=[]),
+            labels=dict(type='list', required=False, default=[]),
             state=dict(type='str',
                        required=False,
                        choices=['present', 'absent', 'drain'],
