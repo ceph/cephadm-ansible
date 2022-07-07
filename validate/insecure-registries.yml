@@ -1,0 +1,15 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+# Author: Guillaume Abrioux <gabrioux@redhat.com>
+
+- hosts: localhost
+  become: false
+  gather_facts: false
+  tasks:
+    - name: fail if insecure_registry is undefined
+      fail:
+        msg: "'insecure_registry' is undefined, it must be set when 'set_insecure_registries' is 'true'."
+      when:
+        - set_insecure_registries | default(false) | bool
+        - insecure_registry is undefined
