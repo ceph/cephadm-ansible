@@ -131,7 +131,7 @@ Options:
 **default**: pacific
 
 `ceph_dev_branch`: The development branch to be used in shaman when `ceph_origin` is 'shaman'.\
-**default**: master
+**default**: main
 
 `ceph_dev_sha1`: The sha1 corresponding to the build to be used when `ceph_origin` is 'shaman'.\
 **default**: latest
