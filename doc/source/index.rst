@@ -190,7 +190,7 @@ ceph_dev_branch
   The development branch to be used in shaman when `ceph_origin` is 'shaman'.
 
 **default**
-  "master"
+  "main"
 
 ceph_dev_sha1
 ~~~~~~~~~~~~~
