@@ -42,7 +42,7 @@
           block:
             - name: enable red hat storage tools repository
               rhsm_repository:
-                name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms"
+                name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms"
 
             - name: disable older rhceph repositories if any
               rhsm_repository:
