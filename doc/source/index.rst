@@ -256,6 +256,7 @@ priority
 components
 ##########
 **description**
+  This is a Debian OS-based family parameter only.
   The components of this ubuntu/debian repository.
 
 
