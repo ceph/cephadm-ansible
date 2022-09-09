@@ -254,7 +254,7 @@ priority
   The priority of this repository.
 
 components
-########
+##########
 **description**
   The components of this ubuntu/debian repository.
 
