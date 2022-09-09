@@ -52,7 +52,7 @@
                 - rhceph-4-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
                 - rhceph-4-mon-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
                 - rhceph-4-osd-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
-              when: ansible_facts['architecture'] | int == 8
+              when: ansible_facts['distribution_major_version'] | int == 8
 
         - name: enable repo from download.ceph.com
           when: ceph_origin == 'community'
