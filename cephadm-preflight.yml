@@ -94,6 +94,7 @@
     - name: enable repo from shaman - dev
       when: ceph_origin == 'shaman'
       block:
+<<<<<<< HEAD
         - name: fetch ceph red hat development repository
           uri:
             url: https://shaman.ceph.com/api/repos/ceph/{{ ceph_dev_branch }}/{{ ceph_dev_sha1 }}/centos/{{ ansible_facts['distribution_major_version'] }}/repo?arch={{ ansible_facts['architecture'] }}  # noqa 204
@@ -135,6 +136,53 @@
             baseurl: "{{ item.baseurl }}"
             file: "{{ item.ceph_custom | default(omit) }}"
             priority: "{{ item.priority | default(omit) }}"
+=======
+        - name: enable repo from download.ceph.com
+          block:
+            - name: prevent ceph certificate error
+              apt:
+                name: ca-certificates
+                state: latest
+                update_cache: yes
+              register: result
+              until: result is succeeded
+
+            - name: configure ceph community repository stable key
+              apt_key:
+                url: "{{ ceph_stable_key }}"
+                state: present
+
+            - name: configure Ceph community repository
+              when: ceph_origin == 'community'
+              apt_repository:
+                repo: "deb https://download.ceph.com/debian-{{ ceph_release }}/ {{ ansible_facts['distribution_release'] }} main"
+                state: present
+                filename: ceph
+                update_cache: no
+
+            - name: configure Ceph testing repository
+              when: ceph_origin == 'testing'
+              apt_repository:
+                repo: "deb https://download.ceph.com/debian-testing/ {{ ansible_facts['distribution_release'] }} main"
+                state: present
+                filename: ceph
+                update_cache: no
+
+            - name: configure Ceph custom repositories
+              when: ceph_origin == 'custom'
+              apt_repository:
+                repo: "deb {{ item.baseurl }}/ {{ ansible_facts['distribution_release'] }} {{ item.components }}"
+                state: "{{ item.state | default(omit) }}"
+                filename: ceph_custom
+                update_cache: no
+              loop: "{{ ceph_custom_repositories }}"
+
+        - name: install prerequisites packages
+          apt:
+            name: "{{ ['python3','cephadm','ceph-common'] }}"
+            state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
+            update_cache: yes
+>>>>>>> 564b294 (preflight: support setting up custom repo for ubuntu)
           register: result
           until: result is succeeded
           loop: "{{ ceph_custom_repositories }}"
