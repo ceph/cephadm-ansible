@@ -214,6 +214,15 @@
                 filename: ceph
                 update_cache: no
 
+            - name: configure Ceph custom repositories
+              when: ceph_origin == 'custom'
+              apt_repository:
+                repo: "deb {{ item.baseurl }}/ {{ ansible_facts['distribution_release'] }} {{ item.components }}"
+                state: "{{ item.state | default(omit) }}"
+                filename: ceph_custom
+                update_cache: no
+              loop: "{{ ceph_custom_repositories }}"
+
         - name: install prerequisites packages
           apt:
             name: "{{ ['python3','cephadm','ceph-common'] }}"
