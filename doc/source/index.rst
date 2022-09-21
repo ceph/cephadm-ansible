@@ -253,6 +253,12 @@ priority
 **description**
   The priority of this repository.
 
+components
+##########
+**description**
+  This is a Debian OS-based family parameter only.
+  The components of this ubuntu/debian repository.
+
 
 Example::
 
