@@ -1,5 +1,5 @@
 [ceph_cluster]
-ceph-node0 labels="['mons', 'mgrs', 'monitoring']"
+ceph-node0 labels="['_admin', 'mons', 'mgrs', 'monitoring']"
 ceph-node1 labels="['mons', 'mgrs']"
 ceph-node2 labels="['mons', 'mgrs']"
 ceph-node3 labels="['rgws']"
