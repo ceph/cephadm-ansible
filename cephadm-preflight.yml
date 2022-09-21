@@ -18,6 +18,9 @@
 # ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
 #
 
+- name: variables validations
+  ansible.builtin.import_playbook: validate/preflight.yml
+
 - hosts: all
   become: true
   gather_facts: true
@@ -25,14 +28,6 @@
     - name: import_role ceph_defaults
       import_role:
         name: ceph_defaults
-
-    - name: fail when ceph_origin is custom with no repository defined
-      fail:
-        msg: "You must define 'ceph_custom_repositories' or 'custom_repo_url' when ceph_origin is 'custom'"
-      when:
-        - ceph_origin == 'custom'
-        - custom_repo_url is undefined
-        - ceph_custom_repositories is undefined
 
     - name: redhat family of OS related tasks
       when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
@@ -279,3 +274,7 @@
                     - docker-ce
                     - docker-ce-cli
                     - containerd.io
+
+- name: set insecure container registry in /etc/containers/registries.conf
+  ansible.builtin.import_playbook: cephadm-set-container-insecure-registries.yml
+  when: set_insecure_registries | default(false) | bool
