@@ -10,6 +10,7 @@ workflows that are not covered by [cephadm]_. They are covered by the following 
 * cephadm-clients.yml: Setting up client hosts
 * cephadm-purge-cluster.yml: Remove a Ceph cluster
 * cephadm-distribute-ssh-key.yml: Distribute a SSH public key to all hosts
+* cephadm-set-container-insecure-registries.yml: Add a block in /etc/containers/registries.conf to add an insecure registry
 
 Additionnally, several ansible modules are provided in order to let people writing their own playbooks.
 
@@ -277,6 +278,37 @@ Example::
       baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/x86_64
       file: ceph_shaman_build_x86_64
       priority: '2'
+
+set_insecure_registries
+~~~~~~~~~~~~~~~~~~~~~~~
+**description**
+  Whether ``cephadm-preflight.yml`` playbook will call ``cephadm-set-container-insecure-registries.yml`` to add an insecure registry in ``/etc/containers/registries.conf``.
+  ``insecure_registry`` option must be passed (-e insecure_registry=<registry url>)
+
+**default**
+  false
+
+cephadm-set-container-insecure-registries
+=========================================
+
+This playbook adds a block in ``/etc/containers/registries.conf`` in order to allow an insecure registry to be used.
+
+Usage::
+
+   ansible-playbook -i <inventory host file> cephadm-set-container-insecure-registries.yml -e insecure_registry=<registry url>
+
+
+
+Options
++++++++
+
+insecure_registry
+~~~~~~~~~~~~~~~~~
+**description**
+  The address of the insecure registry to be added to ``/etc/containers/registries.conf``.
+
+**default**
+  No default.
 
 cephadm-distribute-ssh-key
 ==========================

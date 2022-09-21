@@ -1,0 +1,36 @@
+---
+# Copyright Red Hat
+# SPDX-License-Identifier: Apache-2.0
+# Author: Guillaume Abrioux <gabrioux@redhat.com>
+#
+# Usage:
+#
+# ansible-playbook -i <inventory host file> cephadm-set-container-insecure-registries.yml -e insecure_registry=<registry url>
+#
+# eg:
+#
+# ansible-playbook -i hosts cephadm-set-container-insecure-registries.yml -e insecure_registry=localhost:5000
+
+- name: variables validations
+  ansible.builtin.import_playbook: validate/insecure-registries.yml
+
+- hosts: all
+  become: true
+  gather_facts: false
+  tasks:
+    - name: fail if insecure_registry is undefined
+      fail:
+        msg: "'insecure_registry' is undefined"
+      when: insecure_registry is undefined
+
+    - name: add registry as insecure registry in registries.conf
+      blockinfile:
+        path: "{{ registries_conf_path | default('/etc/containers/registries.conf') }}"
+        state: present
+        marker: "# {mark} cephadm-ansible managed : {{ insecure_registry }}"
+        create: yes
+        mode: '0644'
+        block: |
+          [[registry]]
+          location = '{{ insecure_registry }}'
+          insecure = true
