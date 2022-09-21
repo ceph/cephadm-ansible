@@ -137,10 +137,10 @@ def update_host(module: "AnsibleModule",
                 labels: List[str] = None) -> Tuple[int, List[str], str, str]:
     cmd = build_base_cmd_orch(module)
     cmd.extend(['host', action, name])
-    if action == 'add':
+    if action == 'add' and address:
         cmd.append(address)
     if labels:
-        cmd.extend(labels)
+        cmd.extend(["--labels", ",".join(labels)])
     rc, out, err = module.run_command(cmd)
 
     if rc:
@@ -166,7 +166,6 @@ def main() -> None:
             fsid=dict(type='str', required=False),
             image=dict(type='str', required=False)
         ),
-        required_if=[['state', 'present', ['address']]],
         supports_check_mode=True
     )
 
@@ -199,37 +198,29 @@ def main() -> None:
     current_names = [name['hostname'] for name in current_state]
 
     if state == 'present':
-        if set_admin_label:
+        if set_admin_label and '_admin' not in labels:
             labels.append('_admin')
         if name in current_names:
             current_state_host = [host for host in current_state if host['hostname'] == name][0]
-            if labels:
-                differences = set(labels) ^ set(current_state_host['labels'])
-                if differences:
-                    _out = []
-                    for diff in differences:
-                        if diff in current_state_host['labels']:
-                            action = 'rm'
-                        else:
-                            action = 'add'
-                        rc, cmd, out, err = update_label(module, action, current_state_host['hostname'], diff)
-                        _out.append(out)
-                        if rc:
-                            exit_module(rc=rc,
-                                        startd=startd,
-                                        module=module,
-                                        cmd=cmd,
-                                        out=out,
-                                        err=err,
-                                        changed=False)
-                    exit_module(rc=rc,
-                                startd=startd,
-                                module=module,
-                                cmd=cmd,
-                                out=''.join(_out),
-                                err=err,
-                                changed=True)
-                out = '{} is already present, skipping.'.format(name)
+            differences = set(labels) ^ set(current_state_host['labels'])
+            if differences:
+                _out = []
+                for diff in differences:
+                    if diff in current_state_host['labels']:
+                        action = 'rm'
+                    else:
+                        action = 'add'
+                    rc, cmd, out, err = update_label(module, action, current_state_host['hostname'], diff)
+                    _out.append(diff)
+
+                exit_module(rc=rc,
+                            startd=startd,
+                            module=module,
+                            cmd=cmd,
+                            out=f"Label(s) updated: {','.join(_out)}",
+                            err=err,
+                            changed=True)
+            out = '{} is already present, skipping.'.format(name)
         else:
             rc, cmd, out, err = update_host(module, 'add', name, address, labels)
             if not rc:
