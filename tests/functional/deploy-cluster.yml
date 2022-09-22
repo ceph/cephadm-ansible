@@ -75,7 +75,7 @@
     - name: add hosts
       ceph_orch_host:
         name: "{{ ansible_facts['hostname'] }}"
-        address: "{{ ansible_facts['default_ipv4']['address'] }}"
+        address: "{{ ansible_facts['default_ipv4']['address'] if inventory_hostname != 'ceph-node00' else omit }}"
         set_admin_label: "{{ True if inventory_hostname in groups.get('admin', []) else omit }}"
         labels: "{{ labels }}"
       delegate_to: "{{ groups['mons'][0] }}"
