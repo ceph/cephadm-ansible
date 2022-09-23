@@ -124,6 +124,7 @@
                     state: "{{ custom_repo_state | default('present') }}"
                     gpgkey: "{{ custom_repo_gpgkey | default(omit) }}"
                     baseurl: "{{ custom_repo_url }}"
+                    enabled: "{{ custom_repo_enabled | default(1) }}"
                     file: ceph_custom
                     priority: '2'
               when: ceph_custom_repositories is undefined
@@ -138,6 +139,7 @@
                 baseurl: "{{ item.baseurl }}"
                 file: "{{ item.ceph_custom | default(omit) }}"
                 priority: "{{ item.priority | default(omit) }}"
+                enabled: "{{ item.enabled | defualt(omit) }}"
               register: result
               until: result is succeeded
               loop: "{{ ceph_custom_repositories }}"
