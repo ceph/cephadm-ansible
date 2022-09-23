@@ -21,3 +21,14 @@
         - ceph_origin == 'custom'
         - custom_repo_url is undefined
         - ceph_custom_repositories is undefined
+
+    - name: fail if baseurl is not defined for ceph_custom_repositories
+      fail:
+        msg: "One repository is missing a required parameter: name, description, baseurl."
+      loop: "{{ ceph_custom_repositories }}"
+      when:
+        - ceph_origin == 'custom'
+        - ceph_custom_repositories is defined
+        - (item.baseurl is undefined
+          or item.name is undefined
+          or item.description is undefined)
