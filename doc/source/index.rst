@@ -631,14 +631,14 @@ Bootstrap and add some hosts::
        - name: apply osd spec
          ceph_orch_apply:
          spec: |
-            service_type: osd
-            service_id: osd
-              placement:
-                host_pattern: '*'
-                label: osd
-            spec:
-              data_devices:
-                all: true
+           service_type: osd
+           service_id: osd
+           placement:
+             host_pattern: '*'
+             label: osd
+           spec:
+             data_devices:
+               all: true
 
    - name: change osd_default_notify_timeout option
      hosts: ceph-mon1
