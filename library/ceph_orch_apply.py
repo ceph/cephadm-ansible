@@ -58,15 +58,15 @@ author:
 
 EXAMPLES = '''
 - name: apply osd spec
-    ceph_orch_apply:
+  ceph_orch_apply:
     spec: |
-        service_type: osd
-        service_id: osd
-        placement:
+      service_type: osd
+      service_id: osd
+      placement:
         label: osds
-        spec:
+      spec:
         data_devices:
-            all: true
+          all: true
 '''
 
 
