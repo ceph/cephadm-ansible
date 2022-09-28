@@ -13,7 +13,7 @@
 
 
 - name: check local prerequisites are in place
-  hosts: localhost
+  hosts: all
   gather_facts: false
   become: true
   any_errors_fatal: true
@@ -24,6 +24,8 @@
         msg: |
           You must provide the cluster fsid to be purged.
           e.g. ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+      run_once: true
+      delegate_to: localhost
       when: fsid is undefined
 
     - name: fail if admin group doesn't exist or is empty
@@ -31,6 +33,8 @@
         msg: |
           You must define a group [admin] in your inventory and add a node where
           admin keyring is present at /etc/ceph/admin.client.keyring
+      run_once: true
+      delegate_to: localhost
       when: "'admin' not in groups or groups['admin'] | length < 1"
 
 
@@ -96,7 +100,7 @@
 
 
 - name: confirm whether user really wants to purge the cluster
-  hosts: localhost
+  hosts: all
   gather_facts: false
   become: false
 
@@ -115,6 +119,8 @@
             Exiting cephadm-purge-cluster playbook, cluster was NOT purged.
             To purge the cluster, either say 'yes' at the prompt or use `-e ireallymeanit=yes`
             on the command line when invoking the playbook
+      run_once: true
+      delegate_to: localhost
       when: ireallymeanit != 'yes'
 
 
