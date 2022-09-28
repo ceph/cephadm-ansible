@@ -134,6 +134,7 @@ ceph_origin
         baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/noarch
         file: ceph_shaman_build_noarch
         priority: '2'
+        enabled: 1
       - name: ceph_custom_x86_64
         state: present
         description: Ceph custom repo x86_64
@@ -141,6 +142,7 @@ ceph_origin
         baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/x86_64
         file: ceph_shaman_build_x86_64
         priority: '2'
+        enabled: 1
 
   Given that the definition is more complex, you might want to define it as a group_vars/host_vars rather than as an extra-var::
 
@@ -154,6 +156,7 @@ ceph_origin
         baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/noarch
         file: ceph_shaman_build_noarch
         priority: '2'
+        enabled: 1
       - name: ceph_custom_x86_64
         state: present
         description: Ceph custom repo x86_64
@@ -161,6 +164,7 @@ ceph_origin
         baseurl: https://4.chacra.ceph.com/r/ceph/main/cf17ed16c3964b635e9b6c22e607ea5672341c5c/centos/8/flavors/default/x86_64
         file: ceph_shaman_build_x86_64
         priority: '2'
+        enabled: 1
 
 
 ``shaman``
