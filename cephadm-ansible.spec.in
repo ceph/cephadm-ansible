@@ -25,7 +25,7 @@ cephadm-ansible is a collection of Ansible playbooks to simplify workflows that 
 %install
 mkdir -p %{buildroot}%{_datarootdir}/cephadm-ansible
 
-for f in ansible.cfg *.yml ceph_defaults library module_utils; do
+for f in ansible.cfg *.yml ceph_defaults library module_utils validate; do
   cp -a $f %{buildroot}%{_datarootdir}/cephadm-ansible
 done
 
