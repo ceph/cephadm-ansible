@@ -1,0 +1,45 @@
+all:
+  hosts:
+    ceph-deploy: 
+      ansible_host: 147.75.48.155
+      ansible_user: root
+      ansible_ssh_private_key_file: '~/.ssh/openstack_ansible_equinix'
+    au-sy-1-oshv1:
+      ansible_host: 192.168.100.100
+      ansible_user: root
+      ansible_ssh_private_key_file: '~/.ssh/openstack_ansible_equinix'
+    au-sy-1-oshv2:
+      ansible_host: 192.168.100.101
+      ansible_user: root
+      ansible_ssh_private_key_file: '~/.ssh/openstack_ansible_equinix'
+    au-sy-1-oshv3:
+      ansible_host: 192.168.100.102
+      ansible_user: root
+      ansible_ssh_private_key_file: '~/.ssh/openstack_ansible_equinix'
+
+ceph_hosts:
+    hosts:
+      au-sy-1-oshv1
+      au-sy-1-oshv2
+      au-sy-1-oshv3
+monitoring:
+  hosts:
+    ceph_hosts
+
+mons:
+  hosts:
+      ceph_hosts
+osds:
+  hosts:
+    ceph_hosts
+    
+rbdmirrors:
+  hosts:
+    ceph_hosts
+nfss:
+  hosts:
+    ceph_hosts
+
+grafana-server:
+  hosts:
+    ceph_hosts
