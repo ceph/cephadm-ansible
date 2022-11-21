@@ -1,0 +1,80 @@
+---
+- name: Bootstrap the Ceph Cluster
+  hosts: ceph_monitor_one
+  gather_facts: true
+  tasks:
+  - name: Test if the cluster has been bootstrapped
+    ansible.builtin.stat:
+      path: "/etc/ceph/ceph.conf"
+    register: ceph_installed
+  - name: Bootstrap the first host
+    ansible.builtin.command:
+      cmd: "cephadm bootstrap --mon-ip 192.168.100.100"
+    register: ceph_bootstrap
+    failed_when: ceph_bootstrap.rc != 0
+    changed_when: '"Bootstrap complete." in ceph_bootstrap.stdout'
+    when: not ceph_installed.stat.exists
+- name: Bootstrap the Ceph Cluster
+  hosts: ceph_hosts
+  gather_facts: true
+  tasks:
+    - name: Add Ceph Repo
+      ansible.builtin.command:
+        cmd: "cephadm add-repo --release quincy"
+      register: post_install
+      failed_when: post_install.rc != 0
+      changed_when: '"Completed adding repo." in post_install.stdout'
+    - name: Install ceph-common
+      ansible.builtin.command:
+        cmd: "cephadm install ceph-common"
+      register: ceph_common
+      failed_when: ceph_common.rc != 0
+      changed_when: '"Completed adding repo." in ceph_common.stdout'
+
+- name: Get Ceph public key
+  hosts: ceph_monitor_one
+  gather_facts: true
+  tasks:
+    - name: Copy Ceph Keys to localhost
+      ansible.builtin.fetch:
+        src: /etc/ceph/ceph.pub
+        dest: /tmp/ceph/ceph.pub
+        flat: true
+- name: Ceph Key Distribution
+  hosts: ceph_monitor_balance
+  gather_facts: true
+  tasks:
+    - name: Push key
+      ansible.posix.authorized_key:
+        # key: /tmp/ceph/ceph.pub
+        key: "{{ lookup('file', '/tmp/ceph/ceph.pub') }}"
+        user: root
+        state: present
+
+- name: Bootstrap remaining hosts
+  hosts: ceph_monitor_one
+  tasks:
+    - name: Update Hosts file
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        insertafter: EOF
+        marker: "# {mark} ANSIBLE MANAGED BLOCK"
+        block: |
+          192.168.100.100   AU-SY-1-OSHV1
+          192.168.100.101   AU-SY-1-OSHV2
+          192.168.100.102   AU-SY-1-OSHV3
+    - name: Add remaining hosts to Ceph Cluster
+      ansible.builtin.command:
+        cmd: "ceph orch host add AU-SY-1-OSHV2 192.168.100.101 --labels _admin"
+      register: add_host1
+      failed_when: add_host1.rc != 0
+      changed_when: '"Added host" in add_host1.stdout'
+    - name: Waiting for 2 mins to avoid a race condition
+      ansible.builtin.pause:
+        minutes: 2
+    - name: Add remaining hosts to Ceph Cluster
+      ansible.builtin.command:
+        cmd: "ceph orch host add AU-SY-1-OSHV3 192.168.100.102 --labels _admin"
+      register: add_host2
+      failed_when: add_host2.rc != 0
+      changed_when: '"Added host" in add_host2.stdout'
