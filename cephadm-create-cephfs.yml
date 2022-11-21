@@ -1,0 +1,11 @@
+---
+- name: Bootstrap remaining hosts
+  hosts: ceph_monitor_one
+  tasks:
+    # Create Ceph FS - this also will automatically create Ceph MDS Daemons
+    - name: Setup the CephFS Volume
+      ansible.builtin.command:
+        cmd: "ceph fs volume create ceph_data --placement=3"
+      register: add_volume
+      failed_when: add_volume != 0
+      changed_when: '"" in add_volume.stdout'

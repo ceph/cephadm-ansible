@@ -1,0 +1,30 @@
+---
+- name: Configure the Ceph NFS Service
+  hosts: nfss
+  gather_facts: true
+  tasks:
+    - name: Enable the NFS Mgr module
+      ansible.builtin.command:
+        cmd: "ceph mgr module enable nfs"
+      register: nfs_enable
+      failed_when: nfs_enable.rc != 0
+      changed_when: '"enabled" in nfs_enable.stdout'
+    - name: Setup the NFS service using cephadm
+      ansible.builtin.command:
+        cmd: "ceph orch apply nfs machship_nfs --placement=3"
+      register: nfs_setup
+      failed_when: nfs_setup.rc != 0
+      changed_when: '"Scheduled nfs.equinix_nfs update..." in nfs_setup.stdout'
+    - name: Create the NFS cluster
+      ansible.builtin.command:
+        cmd: "ceph nfs cluster create machship_nfs --placement=3"
+      register: nfs_cluster
+      failed_when: nfs_cluster.rc != 0
+      changed_when: '"NFS Cluster Created Successfully" in nfs_cluster.stdout'
+  # TODO: Add Dashboard
+    - name: Create the NFS Export
+      ansible.builtin.command:
+        cmd: "ceph nfs export create cephfs --cluster_id=machship_nfs --pseudo-path='/export/machship_nfs' --fsname='ceph_data' --squash=none"
+      register: nfs_export
+      failed_when: nfs_export.rc != 0
+      changed_when: '"bind" in nfs_export.stdout'
