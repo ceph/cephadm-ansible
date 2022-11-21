@@ -19,27 +19,51 @@ all:
 
 ceph_hosts:
     hosts:
+      192.168.100.100
+      192.168.100.101
+      192.168.100.102
+
+ceph_monitor_one:
+  hosts:
+    au-sy-1-oshv1
+
+ceph_monitor_balance:
+hosts:
+    192.168.100.101
+    192.168.100.102
+
+monitoring:
+  hosts:
       au-sy-1-oshv1
       au-sy-1-oshv2
       au-sy-1-oshv3
-monitoring:
-  hosts:
-    ceph_hosts
 
 mons:
   hosts:
-      ceph_hosts
+      au-sy-1-oshv1
+      au-sy-1-oshv2
+      au-sy-1-oshv3
+
 osds:
   hosts:
-    ceph_hosts
+    au-sy-1-oshv1
+    au-sy-1-oshv2
+    au-sy-1-oshv3
     
 rbdmirrors:
   hosts:
-    ceph_hosts
+    au-sy-1-oshv1
+    au-sy-1-oshv2
+    au-sy-1-oshv3
+
 nfss:
   hosts:
-    ceph_hosts
+    au-sy-1-oshv1
+    au-sy-1-oshv2
+    au-sy-1-oshv3
 
 grafana-server:
   hosts:
-    ceph_hosts
+    au-sy-1-oshv1
+    au-sy-1-oshv2
+    au-sy-1-oshv3
