@@ -139,7 +139,7 @@
                 baseurl: "{{ item.baseurl }}"
                 file: "{{ item.ceph_custom | default(omit) }}"
                 priority: "{{ item.priority | default(omit) }}"
-                enabled: "{{ item.enabled | defualt(omit) }}"
+                enabled: "{{ item.enabled | default(omit) }}"
               register: result
               until: result is succeeded
               loop: "{{ ceph_custom_repositories }}"
