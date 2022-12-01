@@ -15,7 +15,7 @@
 # limitations under the License.
 
 from __future__ import absolute_import, division, print_function
-from typing import List, Tuple
+from typing import Optional, List, Tuple
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
@@ -134,7 +134,7 @@ def update_host(module: "AnsibleModule",
                 action: str,
                 name: str,
                 address: str = '',
-                labels: List[str] = None) -> Tuple[int, List[str], str, str]:
+                labels: Optional[List[str]] = None) -> Tuple[int, List[str], str, str]:
     cmd = build_base_cmd_orch(module)
     cmd.extend(['host', action, name])
     if action == 'add' and address:
