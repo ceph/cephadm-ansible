@@ -46,12 +46,162 @@
     - name: rhcs related tasks
       when: ceph_origin == 'rhcs'
       block:
+<<<<<<< HEAD
         - name: enable red hat storage tools repository
           rhsm_repository:
             name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms"
 
     - name: enable repo from download.ceph.com
       when: ceph_origin == 'community'
+=======
+        - name: rhcs related tasks
+          when: ceph_origin == 'rhcs'
+          block:
+            - name: enable red hat ceph storage tools repository
+              rhsm_repository:
+                name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms"
+
+            - name: disable older rhceph repositories if any
+              rhsm_repository:
+                name: "{{ item }}"
+                state: absent
+              loop:
+                - rhceph-4-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
+                - rhceph-4-mon-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
+                - rhceph-4-osd-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
+              when: ansible_facts['distribution_major_version'] | int == 8
+
+        - name: enable repo from download.ceph.com
+          when: ceph_origin == 'community'
+          block:
+            - name: configure ceph community repository stable key
+              rpm_key:
+                key: "{{ ceph_stable_key }}"
+                state: present
+              register: result
+              until: result is succeeded
+
+            - name: configure ceph community stable repository
+              yum_repository:
+                name: ceph_stable
+                description: Ceph Stable $basearch repo
+                gpgcheck: yes
+                state: present
+                gpgkey: "{{ ceph_stable_key }}"
+                baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/$basearch"
+                file: ceph_stable
+                priority: '2'
+              register: result
+              until: result is succeeded
+
+            - name: configure ceph community stable noarch repository
+              yum_repository:
+                name: ceph_stable_noarch
+                description: Ceph Stable noarch repo
+                gpgcheck: yes
+                state: present
+                gpgkey: "{{ ceph_stable_key }}"
+                baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/noarch"
+                file: ceph_stable
+                priority: '2'
+              register: result
+              until: result is succeeded
+
+        - name: enable repo from shaman - dev
+          when: ceph_origin == 'shaman'
+          block:
+            - name: fetch ceph development repository
+              uri:
+                url: https://shaman.ceph.com/api/repos/ceph/{{ ceph_dev_branch }}/{{ ceph_dev_sha1 }}/centos/{{ ansible_facts['distribution_major_version'] }}/repo?arch={{ ansible_facts['architecture'] }}  # noqa 204
+                return_content: yes
+              register: ceph_dev_yum_repo
+
+            - name: configure ceph development repository
+              copy:
+                content: "{{ ceph_dev_yum_repo.content }}"
+                dest: /etc/yum.repos.d/ceph-dev.repo
+                owner: root
+                group: root
+                mode: '0644'
+                backup: yes
+
+            - name: remove ceph_stable repositories
+              yum_repository:
+                name: '{{ item }}'
+                file: ceph_stable
+                state: absent
+              with_items:
+                - ceph_stable
+                - ceph_stable_noarch
+
+        - name: enable custom repo
+          when: ceph_origin == 'custom'
+          block:
+            - name: set_fact ceph_custom_repositories
+              set_fact:
+                ceph_custom_repositories:
+                  - name: ceph_custom
+                    description: Ceph custom repo
+                    gpgcheck: "{{ 'yes' if custom_repo_gpgkey is defined else 'no' }}"
+                    state: "{{ custom_repo_state | default('present') }}"
+                    gpgkey: "{{ custom_repo_gpgkey | default(omit) }}"
+                    baseurl: "{{ custom_repo_url }}"
+                    enabled: "{{ custom_repo_enabled | default(1) }}"
+                    file: ceph_custom
+                    priority: '2'
+              when: ceph_custom_repositories is undefined
+
+            - name: setup custom repositories
+              yum_repository:
+                name: "{{ item.name }}"
+                description: "{{ item.description }}"
+                state: "{{ item.state | default(omit) }}"
+                gpgcheck: "{{ item.gpgcheck | default(omit) }}"
+                gpgkey: "{{ item.gpgkey | default(omit) }}"
+                baseurl: "{{ item.baseurl }}"
+                file: "{{ item.ceph_custom | default(omit) }}"
+                priority: "{{ item.priority | default(omit) }}"
+                enabled: "{{ item.enabled | default(omit) }}"
+              register: result
+              until: result is succeeded
+              loop: "{{ ceph_custom_repositories }}"
+
+        - name: install epel-release
+          when: ansible_facts['distribution'] == 'CentOS'
+          block:
+            - name: enable CentOS PowerTools repository for epel
+              command: dnf config-manager --set-enabled powertools
+              changed_when: false
+
+            - name: install package
+              package:
+                name: epel-release
+                state: present
+              register: result
+              until: result is succeeded
+
+        - name: install ceph-common on rhel
+          command: dnf install --allowerasing --assumeyes ceph-common
+          changed_when: false
+          register: result
+          until: result is succeeded
+
+        - name: install prerequisites packages
+          package:
+            name: "{{ ceph_pkgs }}"
+            state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
+          register: result
+          until: result is succeeded
+
+        - name: ensure chronyd is running
+          service:
+            name: chronyd
+            state: started
+            enabled: yes
+
+    - name: Ubuntu related tasks
+      when: ansible_facts['distribution'] == 'Ubuntu'
+>>>>>>> 726a59d (preflight: fix repo task names)
       block:
         - name: configure red hat ceph community repository stable key
           rpm_key:
