@@ -35,7 +35,7 @@
         - name: rhcs related tasks
           when: ceph_origin == 'rhcs'
           block:
-            - name: enable red hat storage tools repository
+            - name: enable red hat ceph storage tools repository
               rhsm_repository:
                 name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms"
 
@@ -52,14 +52,14 @@
         - name: enable repo from download.ceph.com
           when: ceph_origin == 'community'
           block:
-            - name: configure red hat ceph community repository stable key
+            - name: configure ceph community repository stable key
               rpm_key:
                 key: "{{ ceph_stable_key }}"
                 state: present
               register: result
               until: result is succeeded
 
-            - name: configure red hat ceph stable community repository
+            - name: configure ceph community stable repository
               yum_repository:
                 name: ceph_stable
                 description: Ceph Stable $basearch repo
@@ -72,7 +72,7 @@
               register: result
               until: result is succeeded
 
-            - name: configure red hat ceph stable noarch community repository
+            - name: configure ceph community stable noarch repository
               yum_repository:
                 name: ceph_stable_noarch
                 description: Ceph Stable noarch repo
@@ -88,13 +88,13 @@
         - name: enable repo from shaman - dev
           when: ceph_origin == 'shaman'
           block:
-            - name: fetch ceph red hat development repository
+            - name: fetch ceph development repository
               uri:
                 url: https://shaman.ceph.com/api/repos/ceph/{{ ceph_dev_branch }}/{{ ceph_dev_sha1 }}/centos/{{ ansible_facts['distribution_major_version'] }}/repo?arch={{ ansible_facts['architecture'] }}  # noqa 204
                 return_content: yes
               register: ceph_dev_yum_repo
 
-            - name: configure ceph red hat development repository
+            - name: configure ceph development repository
               copy:
                 content: "{{ ceph_dev_yum_repo.content }}"
                 dest: /etc/yum.repos.d/ceph-dev.repo
