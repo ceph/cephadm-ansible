@@ -7,7 +7,7 @@
     ansible.builtin.command:
           cmd: "ceph orch daemon add osd AU-SY-1-OSHV1:/dev/nvme0n1,/dev/nvme1n1"
     register: add_disk
-    failed_when: add_disk != 0
+    failed_when: add_disk.rc != 0
     changed_when: '"Created osd(s)" in add_disk.stdout'
   - name: Waiting for 1 min to avoid a race condition
     ansible.builtin.pause:
@@ -16,7 +16,7 @@
     ansible.builtin.command:
           cmd: "ceph orch daemon add osd AU-SY-1-OSHV2:/dev/nvme0n1,/dev/nvme1n1"
     register: add_disk
-    failed_when: add_disk != 0
+    failed_when: add_disk.rc != 0
     changed_when: '"Created osd(s)" in add_disk.stdout'
   - name: Waiting for 1 min to avoid a race condition
     ansible.builtin.pause:
@@ -25,19 +25,19 @@
     ansible.builtin.command:
           cmd: "ceph orch daemon add osd AU-SY-1-OSHV3:/dev/nvme0n1,/dev/nvme1n1"
     register: add_disk
-    failed_when: add_disk != 0
+    failed_when: add_disk.rc != 0
     changed_when: '"Created osd(s)" in add_disk.stdout'
 # TODO: Create Ceph FS - this also will automatically create Ceph MDS Daemons
   - name: Setup the CephFS Volume
     ansible.builtin.command:
           cmd: "ceph fs volume create ceph_data --placement=3"
     register: add_volume
-    failed_when: add_volume != 0
+    failed_when: add_volume.rc != 0
     changed_when: '"" in add_volume.stdout'
 # TODO: Add RGW
   - name: Setup the CephFS Volume
     ansible.builtin.command:
-          cmd: "ceph orch apply rgw machship_rgw"
+          cmd: "ceph orch apply rgw machship_rgw --port=81"
     register: add_rgw
-    failed_when: add_rgw != 0
+    failed_when: add_rgw.rc != 0
     changed_when: '"Scheduled rgw" in add_rgw.stdout'

@@ -198,7 +198,7 @@
             - name: configure Ceph community repository
               when: ceph_origin == 'community'
               apt_repository:
-                repo: "deb https://download.ceph.com/debian-{{ ceph_release }}/ {{ ansible_facts['distribution_release'] }} main"
+                repo: "deb https://download.ceph.com/debian-{{ ceph_release }}/ focal main"
                 state: present
                 filename: ceph
                 update_cache: no

@@ -1,0 +1,33 @@
+---
+- name: Generate openstack authentication entries
+  hosts: ceph_monitor_one
+  tasks:
+    # Create Ceph FS - this also will automatically create Ceph MDS Daemons
+    - name: Add the Glance user
+      ansible.builtin.command:
+        cmd: "ceph auth get-or-create client.glance mon 'profile rbd' osd 'profile rbd pool=images' mgr 'profile rbd pool=images'"
+    - name: Add the Cinder user
+      ansible.builtin.command:
+        cmd: "ceph auth get-or-create client.cinder mon 'profile rbd' osd 'profile rbd pool=volumes, profile rbd pool=vms, profile rbd-read-only pool=images' mgr 'profile rbd pool=volumes, profile rbd pool=vms'"
+    - name: Add the Cinder Backup user
+      ansible.builtin.command:
+        cmd: "ceph auth get-or-create client.cinder-backup mon 'profile rbd' osd 'profile rbd pool=backups' mgr 'profile rbd pool=backups'"
+    - name: Add the Manila user
+      ansible.builtin.command:
+        cmd: "ceph auth get-or-create client.manila mgr 'allow rw' mon 'allow r'"
+    - name: Export Glance keyring
+      ansible.builtin.command:
+        chdir: /etc/ceph
+        cmd: "ceph auth get-or-create client.glance -o ceph.client.glance.keyring"
+    - name: Export Cinder keyring
+      ansible.builtin.command:
+        chdir: /etc/ceph
+        cmd: "ceph auth get-or-create client.cinder -o ceph.client.cinder.keyring"
+    - name: Export Cinder Backup keyring
+      ansible.builtin.command:
+        chdir: /etc/ceph
+        cmd: "ceph auth get-or-create client.cinder-backup -o ceph.client.cinder-backup.keyring"
+    - name: Export Manila keyring
+      ansible.builtin.command:
+        chdir: /etc/ceph
+        cmd: "ceph auth get-or-create client.manila -o ceph.client.manila.keyring"

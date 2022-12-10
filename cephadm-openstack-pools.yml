@@ -1,0 +1,49 @@
+---
+- name: Configure the Ceph NFS Service
+  hosts: ceph_monitor_one
+  gather_facts: true
+  tasks:
+    - name: Setup the Ceph Volume Pools
+      ansible.builtin.command:
+        cmd: "ceph osd pool create volumes"
+      register: add_volume
+      failed_when: add_volume.rc != 0
+      changed_when: '"created" in add_volume.stdout'
+    - name: Setup the Ceph Volume Pools
+      ansible.builtin.command:
+        cmd: "ceph osd pool create images"
+      register: add_volume
+      failed_when: add_volume.rc != 0
+      changed_when: '"created" in add_volume.stdout'
+    - name: Setup the Ceph Volume Pools
+      ansible.builtin.command:
+        cmd: "ceph osd pool create vms"
+      register: add_volume
+      failed_when: add_volume.rc != 0
+      changed_when: '"created" in add_volume.stdout'
+    - name: Setup the Ceph Volume Pools
+      ansible.builtin.command:
+        cmd: "ceph osd pool create backups"
+      register: add_volume
+      failed_when: add_volume.rc != 0
+      changed_when: '"created" in add_volume.stdout'
+    - name: Initialise Ceph pool"
+      ansible.builtin.command:
+        cmd: "rbd pool init volumes"
+      register: init_volume
+      failed_when: init_volume.rc != 0
+    - name: Initialise Ceph pool"
+      ansible.builtin.command:
+        cmd: "rbd pool init images"
+      register: init_volume
+      failed_when: init_volume.rc != 0
+    - name: Initialise Ceph pool"
+      ansible.builtin.command:
+        cmd: "rbd pool init backups"
+      register: init_volume
+      failed_when: init_volume.rc != 0
+    - name: Initialise Ceph pool"
+      ansible.builtin.command:
+        cmd: "rbd pool init vms"
+      register: init_volume
+      failed_when: init_volume.rc != 0

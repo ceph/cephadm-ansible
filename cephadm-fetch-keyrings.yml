@@ -1,0 +1,61 @@
+---
+- name: Generate openstack authentication entries
+  hosts: ceph_monitor_one
+  gather_facts: true
+  tasks:
+  - name: Fetch Glance keyring from Ceph host
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.glance.keyring
+      dest: /etc/kolla/config/glance/ceph.client.glance.keyring
+      flat: true
+  - name: Fetch Cinder keyring from Ceph host
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.cinder.keyring
+      dest: /etc/kolla/config/cinder/ceph.client.cinder.keyring
+      flat: true
+  - name: Fetch Cinder keyring from Ceph host
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.cinder.keyring
+      dest: /etc/kolla/config/cinder/cinder-volume/ceph.client.cinder.keyring
+      flat: true
+  - name: Fetch Cinder keyring from Ceph host for Nova
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.cinder.keyring
+      dest: /etc/kolla/config/nova/ceph.client.cinder.keyring
+      flat: true
+  - name: Fetch Cinder-Backup keyring from Ceph host
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.cinder-backup.keyring
+      dest: /etc/kolla/config/cinder/ceph.client.cinder-backup.keyring
+      flat: true
+  - name: Fetch Cinder-Backup keyring from Ceph host
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.cinder-backup.keyring
+      dest: /etc/kolla/config/cinder/cinder-backup/ceph.client.cinder.keyring
+      flat: true
+  - name: Fetch Manila keyring from Ceph host
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.client.manila.keyring
+      dest: /etc/kolla/config/manila/ceph.client.manila.keyring
+      flat: true
+  - name: Fetch Glance ceph.conf
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.conf
+      dest: /etc/kolla/config/glance/ceph.conf
+      flat: true
+  - name: Fetch Cinder ceph.conf
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.conf
+      dest: /etc/kolla/config/cinder/ceph.conf
+      flat: true
+  - name: Fetch Cinder ceph.conf for Nova
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.conf
+      dest: /etc/kolla/config/nova/ceph.conf
+      flat: true
+  - name: Fetch Manila ceph.conf
+    ansible.builtin.fetch:
+      src: /etc/ceph/ceph.conf
+      dest: /etc/kolla/config/manila/ceph.conf
+      flat: true
+
