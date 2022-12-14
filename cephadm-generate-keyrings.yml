@@ -3,6 +3,10 @@
   hosts: ceph_monitor_one
   tasks:
     # Create Ceph FS - this also will automatically create Ceph MDS Daemons
+    - name: Remove leading whitespace from ceph.conf
+      ansible.builtin.command:
+        chdir: /etc/ceph
+        cmd: sed "s/^[ \t]*//" -i ceph.conf
     - name: Add the Glance user
       ansible.builtin.command:
         cmd: "ceph auth get-or-create client.glance mon 'profile rbd' osd 'profile rbd pool=images' mgr 'profile rbd pool=images'"
