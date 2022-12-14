@@ -1,5 +1,16 @@
 ---
-
+- name: Clear SSH known host keys
+  hosts: 'localhost'
+  tasks:
+    - name: Clear target host ssh history
+      ansible.builtin.command:
+        cmd: 'ssh-keygen -f "/root/.ssh/known_hosts" -R "192.168.100.100"'
+    - name: Clear target host ssh history
+      ansible.builtin.command:
+        cmd: 'ssh-keygen -f "/root/.ssh/known_hosts" -R "192.168.100.101"'
+    - name: Clear target host ssh history
+      ansible.builtin.command:
+        cmd: 'ssh-keygen -f "/root/.ssh/known_hosts" -R "192.168.100.102"'
 - import_playbook: cephadm-preflight.yml
 - import_playbook: cephadm-bootstrap.yml
 - import_playbook: cephadm-osd.yml
