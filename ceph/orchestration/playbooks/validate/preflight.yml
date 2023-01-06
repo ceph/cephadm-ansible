@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 # Author: Guillaume Abrioux <gabrioux@redhat.com>
 
-- ansible.builtin.import_playbook: insecure-registries.yml
+- ansible.builtin.import_playbook: insecure_registries.yml
   when: set_insecure_registries | default(false) | bool
 
 - hosts: localhost

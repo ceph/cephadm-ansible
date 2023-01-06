@@ -7,7 +7,7 @@
 #
 # Usage:
 #
-# ansible-playbook -i <inventory host file> rocksdb-resharding.yml -e osd_id=0 -e admin_node=ceph-mon0
+# ansible-playbook -i <inventory host file> rocksdb_resharding.yml -e osd_id=0 -e admin_node=ceph-mon0
 #
 # Required run-time variables
 # ------------------
@@ -74,7 +74,7 @@
             container_host: "{{ (ceph_orch_ps.stdout | from_json)[0]['hostname'] }}"
 
         - name: stop the osd
-          ceph_orch_daemon:
+          ceph.orchestration.ceph_orch_daemon:
             fsid: "{{ fsid }}"
             state: stopped
             daemon_id: "{{ osd_id }}"
@@ -104,7 +104,7 @@
           changed_when: false
 
     - name: restart the osd
-      ceph_orch_daemon:
+      ceph.orchestration.ceph_orch_daemon:
         fsid: "{{ fsid }}"
         state: started
         daemon_id: "{{ osd_id }}"

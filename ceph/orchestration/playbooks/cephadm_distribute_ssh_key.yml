@@ -19,9 +19,9 @@
 #
 # Example
 # -------
-# ansible-playbook -i hosts cephadm-distribute-ssh-key.yml -e cephadm_ssh_user=foo -e cephadm_pubkey_path=/home/cephadm/ceph.key -e admin_node=ceph-node0
+# ansible-playbook -i hosts cephadm_distribute_ssh_key.yml -e cephadm_ssh_user=foo -e cephadm_pubkey_path=/home/cephadm/ceph.key -e admin_node=ceph-node0
 #
-# ansible-playbook -i hosts cephadm-distribute-ssh-key.yml -e cephadm_ssh_user=foo -e admin_node=ceph-node0
+# ansible-playbook -i hosts cephadm_distribute_ssh_key.yml -e cephadm_ssh_user=foo -e admin_node=ceph-node0
 
 - hosts: all
   become: true

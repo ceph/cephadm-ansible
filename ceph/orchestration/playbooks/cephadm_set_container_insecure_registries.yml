@@ -5,14 +5,14 @@
 #
 # Usage:
 #
-# ansible-playbook -i <inventory host file> cephadm-set-container-insecure-registries.yml -e insecure_registry=<registry url>
+# ansible-playbook -i <inventory host file> cephadm_set_container_insecure_registries.yml -e insecure_registry=<registry url>
 #
 # eg:
 #
-# ansible-playbook -i hosts cephadm-set-container-insecure-registries.yml -e insecure_registry=localhost:5000
+# ansible-playbook -i hosts cephadm_set_container_insecure_registries.yml -e insecure_registry=localhost:5000
 
 - name: variables validations
-  ansible.builtin.import_playbook: validate/insecure-registries.yml
+  ansible.builtin.import_playbook: validate/insecure_registries.yml
 
 - hosts: all
   become: true

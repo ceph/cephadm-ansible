@@ -20,7 +20,7 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_orch  # type: ignore
+    from ansible_collections.ceph.orchestration.plugins.module_utils.ceph_common import exit_module, build_base_cmd_orch  # type: ignore
 except ImportError:
     from module_utils.ceph_common import exit_module, build_base_cmd_orch
 import datetime

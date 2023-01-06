@@ -9,7 +9,7 @@
 #
 # Usage:
 #
-# ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+# ansible-playbook -i <inventory host file> cephadm_purge_cluster.yml -e fsid=<your fsid>
 
 
 - name: check local prerequisites are in place

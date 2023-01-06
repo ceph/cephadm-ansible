@@ -7,15 +7,15 @@
 #
 # Usage:
 #
-# ansible-playbook -i <inventory host file> cephadm-preflight.yml
+# ansible-playbook -i <inventory host file> cephadm_preflight.yml
 #
 # You can limit the execution to a set of hosts by using `--limit` option:
 #
-# ansible-playbook -i <inventory host file> cephadm-preflight.yml --limit <my_osd_group|my_node_name>
+# ansible-playbook -i <inventory host file> cephadm_preflight.yml --limit <my_osd_group|my_node_name>
 #
 # You can override variables using `--extra-vars` parameter:
 #
-# ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_origin=rhcs"
+# ansible-playbook -i <inventory host file> cephadm_preflight.yml --extra-vars "ceph_origin=rhcs"
 #
 
 - name: variables validations
@@ -278,5 +278,5 @@
                     - containerd.io
 
 - name: set insecure container registry in /etc/containers/registries.conf
-  ansible.builtin.import_playbook: cephadm-set-container-insecure-registries.yml
+  ansible.builtin.import_playbook: cephadm_set_container_insecure_registries.yml
   when: set_insecure_registries | default(false) | bool

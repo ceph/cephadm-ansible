@@ -21,7 +21,7 @@
 #
 # Example
 # -------
-# ansible-playbook -i hosts cephadm-clients.yml -e fsid=BLA -e client_group=fs_clients -e keyring=/etc/ceph/fs.keyring
+# ansible-playbook -i hosts cephadm_clients.yml -e fsid=BLA -e client_group=fs_clients -e keyring=/etc/ceph/fs.keyring
 #
 
 
