@@ -11,15 +11,10 @@ Source0:        %{name}-%{version}-%{shortcommit}.tar.gz
 
 BuildArch:      noarch
 
-%if 0%{?el8}
-BuildRequires: ansible >= 2.9
-Requires: ansible >= 2.9
-%else
 BuildRequires: ansible-core >= 2.9
 BuildRequires: ansible-collection-community-general
 Requires: ansible-core >= 2.9
 Requires: ansible-collection-community-general
-%endif
 
 %description
 cephadm-ansible is a collection of Ansible playbooks to simplify workflows that are not covered by cephadm.
