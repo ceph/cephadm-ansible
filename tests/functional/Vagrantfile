@@ -31,7 +31,7 @@ Vagrant.configure('2') do |config|
   config.ssh.username = 'vagrant'
   config.vm.provider :libvirt do |lv|
     lv.cpu_mode = 'host-passthrough'
-    lv.volume_cache = 'unsafe'
+    lv.disk_driver :cache => 'unsafe'
     lv.graphics_type = 'none'
     lv.cpus = 4
   end
