@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -ex
+
 if [[ "${CEPH_ANSIBLE_VAGRANT_BOX}" =~ "centos/stream" ]]; then
   EL_VERSION="${CEPH_ANSIBLE_VAGRANT_BOX: -1}"
   LATEST_IMAGE="$(curl -s https://cloud.centos.org/centos/${EL_VERSION}-stream/x86_64/images/CHECKSUM | sed -nE 's/^SHA256.*\((.*-([0-9]+).*vagrant-libvirt.box)\).*$/\1/p' | sort -u | tail -n1)"
