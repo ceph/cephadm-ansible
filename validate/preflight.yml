@@ -19,7 +19,7 @@
         msg: "You must define 'ceph_custom_repositories' or 'custom_repo_url' when ceph_origin is 'custom'"
       when:
         - ceph_origin == 'custom'
-        - custom_repo_url is undefined
+        - (custom_repo_url is undefined or custom_repo_url == '')
         - ceph_custom_repositories is undefined
 
     - name: fail if baseurl is not defined for ceph_custom_repositories
