@@ -49,7 +49,7 @@
                 - rhceph-4-osd-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
               when: ansible_facts['distribution_major_version'] | int == 8
 
-        - name: enable repo from download.ceph.com
+        - name: enable ceph package repositories
           when: ceph_origin in ['community', 'ibm']
           block:
             - name: set_fact _ceph_repo
@@ -60,7 +60,7 @@
                   rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
                   baseurl: "{{ ceph_community_repo_baseurl if ceph_origin == 'community' else ceph_ibm_repo_baseurl }}"
 
-            - name: configure ceph community repository stable key
+            - name: configure ceph repository key
               rpm_key:
                 key: "{{ _ceph_repo.rpm_key }}"
                 state: present
