@@ -49,14 +49,12 @@
                 - rhceph-4-osd-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
               when: ansible_facts['distribution_major_version'] | int == 8
 
-
-          # https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/5/rhel8/$basearch/
         - name: enable repo from download.ceph.com
           when: ceph_origin in ['community', 'ibm']
           block:
             - name: set_fact _ceph_repo
               set_fact:
-                _ceph_repos:
+                _ceph_repo:
                   - name: ceph_stable
                     description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
                     rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
