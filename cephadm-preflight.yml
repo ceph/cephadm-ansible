@@ -55,10 +55,10 @@
             - name: set_fact _ceph_repo
               set_fact:
                 _ceph_repo:
-                  - name: ceph_stable
-                    description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
-                    rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
-                    baseurl: "{{ ceph_community_repo_baseurl if ceph_origin == 'community' else ceph_ibm_repo_baseurl }}"
+                  name: ceph_stable
+                  description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
+                  rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
+                  baseurl: "{{ ceph_community_repo_baseurl if ceph_origin == 'community' else ceph_ibm_repo_baseurl }}"
 
             - name: configure ceph community repository stable key
               rpm_key:
