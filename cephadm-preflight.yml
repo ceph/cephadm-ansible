@@ -60,6 +60,7 @@
           register: result
           until: result is succeeded
 
+<<<<<<< HEAD
         - name: configure red hat ceph stable community repository
           yum_repository:
             name: ceph_stable
@@ -85,6 +86,25 @@
             priority: '2'
           register: result
           until: result is succeeded
+=======
+        - name: enable ceph package repositories
+          when: ceph_origin in ['community', 'ibm']
+          block:
+            - name: set_fact _ceph_repo
+              set_fact:
+                _ceph_repo:
+                  name: ceph_stable
+                  description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
+                  rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
+                  baseurl: "{{ ceph_community_repo_baseurl if ceph_origin == 'community' else ceph_ibm_repo_baseurl }}"
+
+            - name: configure ceph repository key
+              rpm_key:
+                key: "{{ _ceph_repo.rpm_key }}"
+                state: present
+              register: result
+              until: result is succeeded
+>>>>>>> 19ad442 (preflight: generalize repo and key task names)
 
     - name: enable repo from shaman - dev
       when: ceph_origin == 'shaman'
