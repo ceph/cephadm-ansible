@@ -50,41 +50,39 @@
           rhsm_repository:
             name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms"
 
-    - name: enable repo from download.ceph.com
-      when: ceph_origin == 'community'
+    - name: enable ceph package repositories
+      when: ceph_origin in ['community', 'ibm']
       block:
-        - name: configure red hat ceph community repository stable key
+        - name: set_fact _ceph_repo
+          set_fact:
+            _ceph_repo:
+              name: ceph_stable
+              description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
+              rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
+              baseurl: "{{ ceph_community_repo_baseurl if ceph_origin == 'community' else ceph_ibm_repo_baseurl }}"
+
+        - name: configure ceph repository key
           rpm_key:
-            key: "{{ ceph_stable_key }}"
+            key: "{{ _ceph_repo.rpm_key }}"
             state: present
           register: result
           until: result is succeeded
 
-        - name: configure red hat ceph stable community repository
+        - name: configure ceph stable repository
           yum_repository:
-            name: ceph_stable
-            description: Ceph Stable $basearch repo
+            name: "ceph_stable_{{ item }}"
+            description: "{{ _ceph_repo.description }} - {{ item }}"
             gpgcheck: yes
             state: present
-            gpgkey: "{{ ceph_stable_key }}"
-            baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/$basearch"
-            file: ceph_stable
+            gpgkey: "{{ _ceph_repo.rpm_key }}"
+            baseurl: "{{ _ceph_repo.baseurl }}/{{ item }}"
+            file: "ceph_stable_{{ item }}"
             priority: '2'
           register: result
           until: result is succeeded
-
-        - name: configure red hat ceph stable noarch community repository
-          yum_repository:
-            name: ceph_stable_noarch
-            description: Ceph Stable noarch repo
-            gpgcheck: yes
-            state: present
-            gpgkey: "{{ ceph_stable_key }}"
-            baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/noarch"
-            file: ceph_stable
-            priority: '2'
-          register: result
-          until: result is succeeded
+          loop:
+            - "$basearch"
+            - "noarch"
 
     - name: enable repo from shaman - dev
       when: ceph_origin == 'shaman'
