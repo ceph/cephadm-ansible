@@ -70,13 +70,13 @@
 
         - name: configure ceph stable repository
           yum_repository:
-            name: ceph_stable
+            name: "ceph_stable_{{ item }}"
             description: "{{ _ceph_repo.description }} - {{ item }}"
             gpgcheck: yes
             state: present
             gpgkey: "{{ _ceph_repo.rpm_key }}"
             baseurl: "{{ _ceph_repo.baseurl }}/{{ item }}"
-            file: ceph_stable
+            file: "ceph_stable_{{ item }}"
             priority: '2'
           register: result
           until: result is succeeded
