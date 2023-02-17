@@ -55,7 +55,7 @@
       block:
         - name: set_fact _ceph_repo
           set_fact:
-            _ceph_repos:
+            _ceph_repo:
               - name: ceph_stable
                 description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
                 rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
