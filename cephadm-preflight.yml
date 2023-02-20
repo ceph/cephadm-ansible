@@ -60,6 +60,7 @@
               description: "{{ 'Ceph Stable repo' if ceph_origin == 'community' else 'IBM Ceph repo' }}"
               rpm_key: "{{ ceph_stable_key if ceph_origin == 'community' else ceph_ibm_key }}"
               baseurl: "{{ ceph_community_repo_baseurl if ceph_origin == 'community' else ceph_ibm_repo_baseurl }}"
+              paths: "{{ [ 'noarch', '$basearch' ] if ceph_origin == 'community' else [ '$basearch' ] }}"
 
         - name: configure ceph repository key
           rpm_key:
@@ -80,9 +81,7 @@
             priority: '2'
           register: result
           until: result is succeeded
-          loop:
-            - "$basearch"
-            - "noarch"
+          loop: "{{ _ceph_repo.paths }}"
 
     - name: enable repo from shaman - dev
       when: ceph_origin == 'shaman'
