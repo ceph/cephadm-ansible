@@ -9,7 +9,7 @@ ceph_stable_key: https://download.ceph.com/keys/release.asc
 ceph_release: pacific
 ceph_community_repo_baseurl: "{{ ceph_mirror }}/rpm-{{ ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/"
 ceph_ibm_repo_baseurl: "https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/{{ ceph_ibm_version }}/rhel{{ ansible_facts['distribution_major_version'] }}/"
-ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/{{ ceph_ibm_version }}/rhel{{ ansible_facts['distribution_major_version'] }}/ibm-key.asc
+ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/RPM-GPG-KEY-IBM-CEPH
 upgrade_ceph_packages: false
 ceph_pkgs:
   - chrony
