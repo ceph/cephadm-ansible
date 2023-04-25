@@ -13,6 +13,7 @@ except ImportError:
     from module_utils.ceph_common import exit_module, build_base_cmd_shell, fatal  # type: ignore
 
 import datetime
+import json
 
 ANSIBLE_METADATA = {
     'metadata_version': '1.1',
@@ -84,20 +85,33 @@ EXAMPLES = '''
 RETURN = '''#  '''
 
 
-def get_or_set_option(module: "AnsibleModule",
-                      action: str,
-                      who: str,
-                      option: str,
-                      value: str) -> Tuple[int, List[str], str, str]:
+def set_option(module: "AnsibleModule",
+               who: str,
+               option: str,
+               value: str) -> Tuple[int, List[str], str, str]:
     cmd = build_base_cmd_shell(module)
-    cmd.extend(['ceph', 'config', action, who, option])
-
-    if action == 'set':
-        cmd.append(value)
+    cmd.extend(['ceph', 'config', 'set', who, option, value])
 
     rc, out, err = module.run_command(cmd)
 
     return rc, cmd, out.strip(), err
+
+
+def get_config_dump(module: "AnsibleModule"):
+    cmd = build_base_cmd_shell(module)
+    cmd.extend(['ceph', 'config', 'dump', '--format', 'json'])
+    rc, out, err = module.run_command(cmd)
+    if rc:
+        fatal(message=f"Can't get current configuration via `ceph config dump`.Error:\n{err}", module=module)
+    out = out.strip()
+    return rc, cmd, out, err
+
+
+def get_current_value(who, option, config_dump):
+    for config in config_dump:
+        if config['section'] == who and config['name'] == option:
+            return config['value']
+    return None
 
 
 def main() -> None:
@@ -135,16 +149,22 @@ def main() -> None:
     startd = datetime.datetime.now()
     changed = False
 
-    rc, cmd, out, err = get_or_set_option(module, 'get', who, option, value)
-    if rc:
-        fatal(message=f"Can't get current value. who={who} option={option}", module=module)
+    rc, cmd, out, err = get_config_dump(module)
+    config_dump = json.loads(out)
+    current_value = get_current_value(who, option, config_dump)
 
     if action == 'set':
-        if value.lower() == out:
+        if value.lower() == current_value:
             out = 'who={} option={} value={} already set. Skipping.'.format(who, option, value)
         else:
-            rc, cmd, out, err = get_or_set_option(module, action, who, option, value)
+            rc, cmd, out, err = set_option(module, who, option, value)
             changed = True
+    else:
+        if current_value is None:
+            out = ''
+            err = 'No value found for who={} option={}'.format(who, option)
+        else:
+            out = current_value
 
     exit_module(module=module, out=out, rc=rc,
                 cmd=cmd, err=err, startd=startd,
