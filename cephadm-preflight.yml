@@ -144,8 +144,8 @@
         - name: install epel-release
           when: ansible_facts['distribution'] == 'CentOS'
           block:
-            - name: enable CentOS PowerTools repository for epel
-              command: dnf config-manager --set-enabled powertools
+            - name: enable required CentOS repository for epel
+              command: dnf config-manager --set-enabled "{{ 'powertools' if ansible_facts['distribution_major_version'] == '8' else 'crb' }}"
               changed_when: false
 
             - name: install package
