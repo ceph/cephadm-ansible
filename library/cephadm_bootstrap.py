@@ -121,6 +121,11 @@ options:
         description:
             - subnet to use for cluster replication, recovery and heartbeats.
         required: false
+    skip_prepare_host:
+        description:
+            -  Do not prepare host.
+        required: false
+        default: false
 author:
     - Dimitri Savineau <dsavinea@redhat.com>
 '''
@@ -171,6 +176,7 @@ def main() -> None:
             ssh_config=dict(type='str', required=False),
             allow_fqdn_hostname=dict(type='bool', required=False, default=False),
             cluster_network=dict(type='str', required=False),
+            skip_prepare_host=dict(type='bool', required=False, default=False),
         ),
         supports_check_mode=True,
         mutually_exclusive=[
@@ -202,6 +208,7 @@ def main() -> None:
     ssh_config = module.params.get('ssh_config')
     allow_fqdn_hostname = module.params.get('allow_fqdn_hostname')
     cluster_network = module.params.get('cluster_network')
+    skip_prepare_host = module.params.get('skip_prepare_host')
 
     startd = datetime.datetime.now()
 
@@ -268,6 +275,9 @@ def main() -> None:
 
     if allow_overwrite:
         cmd.append('--allow-overwrite')
+
+    if skip_prepare_host:
+        cmd.append('--skip-prepare-host')
 
     if registry_url and registry_username and registry_password:
         cmd.extend(['--registry-url', registry_url,
