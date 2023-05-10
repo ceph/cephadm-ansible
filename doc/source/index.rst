@@ -508,6 +508,8 @@ cephadm_bootstrap
   Allow hostname that is fully-qualified.
 ``cluster_network``
   Subnet to use for cluster replication, recovery and heartbeats.
+``skip_prepare_host``
+  Do not prepare host.
 
 
 ceph_orch_host
