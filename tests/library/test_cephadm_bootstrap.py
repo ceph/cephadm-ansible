@@ -302,3 +302,23 @@ class TestCephadmBootstrapModule(object):
         assert result['cmd'] == ['cephadm', 'bootstrap', '--mon-ip', fake_ip,
                                  '--registry-json', fake_registry_json]
         assert result['rc'] == 0
+
+    @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
+    @patch('ansible.module_utils.basic.AnsibleModule.run_command')
+    def test_with_skip_prepare_host(self, m_run_command, m_exit_json):
+        common.set_module_args({
+            'mon_ip': fake_ip
+        })
+        m_exit_json.side_effect = common.exit_json
+        stdout = ''
+        stderr = ''
+        rc = 0
+        m_run_command.return_value = rc, stdout, stderr
+
+        with pytest.raises(common.AnsibleExitJson) as result:
+            cephadm_bootstrap.main()
+
+        result = result.value.args[0]
+        assert result['changed']
+        assert result['cmd'] == ['cephadm', 'bootstrap', '--mon-ip', fake_ip, '--skip-prepare-host']
+        assert result['rc'] == 0
