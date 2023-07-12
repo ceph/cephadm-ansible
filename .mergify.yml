@@ -3,6 +3,13 @@ pull_request_rules:
   - actions:
       backport:
         branches:
+          - reef
+    conditions:
+      - label=backport-reef
+    name: backport reef
+  - actions:
+      backport:
+        branches:
           - quincy
     conditions:
       - label=backport-quincy
