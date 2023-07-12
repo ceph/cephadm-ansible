@@ -24,6 +24,12 @@
 - hosts: all
   become: true
   gather_facts: true
+  vars:
+    repos_to_disable:
+      - rhceph-4-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
+      - rhceph-4-mon-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
+      - rhceph-4-osd-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
+      - rhceph-5-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
   tasks:
     - name: import_role ceph_defaults
       import_role:
@@ -41,13 +47,8 @@
 
             - name: disable older rhceph repositories if any
               rhsm_repository:
-                name: "{{ item }}"
+                name: "{{ repos_to_disable }}"
                 state: absent
-              loop:
-                - rhceph-4-tools-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
-                - rhceph-4-mon-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
-                - rhceph-4-osd-for-rhel-8-{{ ansible_facts['architecture'] }}-rpms
-              when: ansible_facts['distribution_major_version'] | int == 8
 
         - name: enable ceph package repositories
           when: ceph_origin in ['community', 'ibm']
