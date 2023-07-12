@@ -15,7 +15,7 @@ workflows that are not covered by [cephadm]_. They are covered by the following 
 Additionnally, several ansible modules are provided in order to let people writing their own playbooks.
 
 
-.. [cephadm] https://docs.ceph.com/en/latest/cephadm/
+.. [cephadm] https://docs.ceph.com/en/reef/cephadm/
 
 Terminology
 -----------
