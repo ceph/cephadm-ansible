@@ -38,6 +38,14 @@
 - hosts: all
   become: true
   gather_facts: true
+  vars:
+    packages_to_uninstall:
+      - ceph-mds
+      - ceph-mgr
+      - ceph-mon
+      - ceph-osd
+      - ceph-radosgw
+      - rbd-mirror
   tasks:
     - name: import_role ceph_defaults
       import_role:
@@ -141,9 +149,16 @@
       until: result is succeeded
       when: ansible_facts['distribution'] == 'CentOS'
 
+    - name: remove remaining local services ceph packages
+      dnf:
+        name: "{{ packages_to_uninstall }}"
+        state: absent
+        autoremove: no
+
     - name: install ceph-common on rhel
-      command: dnf install --allowerasing --assumeyes ceph-common
-      changed_when: false
+      package:
+        name: ceph-common
+        state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
       register: result
       until: result is succeeded
 
