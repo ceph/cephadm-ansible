@@ -1,12 +1,12 @@
 from mock.mock import patch
 import pytest
 import common
-import ceph_orch_host
+from ansible_collections.ceph.cephadm.plugins.modules import ceph_orch_host
 
 
 class TestCephOrchHost(object):
 
-    @patch('ceph_orch_host.get_current_state')
+    @patch('ansible_collections.ceph.cephadm.plugins.modules.ceph_orch_host.get_current_state')
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     @patch('ansible.module_utils.basic.AnsibleModule.run_command')
     def test_state_absent_host_exists(self, m_run_command, m_exit_json, m_get_current_state):
@@ -38,7 +38,7 @@ class TestCephOrchHost(object):
         assert result['stdout'] == stdout
         assert result['rc'] == 0
 
-    @patch('ceph_orch_host.get_current_state')
+    @patch('ansible_collections.ceph.cephadm.plugins.modules.ceph_orch_host.get_current_state')
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     @patch('ansible.module_utils.basic.AnsibleModule.run_command')
     def test_state_absent_host_doesnt_exist(self, m_run_command, m_exit_json, m_get_current_state):
@@ -71,7 +71,7 @@ class TestCephOrchHost(object):
         assert result['stdout'] == 'ceph-node1 is not present, skipping.'
         assert result['rc'] == 0
 
-    @patch('ceph_orch_host.get_current_state')
+    @patch('ansible_collections.ceph.cephadm.plugins.modules.ceph_orch_host.get_current_state')
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     @patch('ansible.module_utils.basic.AnsibleModule.run_command')
     def test_state_drain(self, m_run_command, m_exit_json, m_get_current_state):
@@ -111,7 +111,7 @@ osd                  7"""
         assert result['stdout'] == stdout
         assert result['rc'] == 0
 
-    @patch('ceph_orch_host.get_current_state')
+    @patch('ansible_collections.ceph.cephadm.plugins.modules.ceph_orch_host.get_current_state')
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     @patch('ansible.module_utils.basic.AnsibleModule.run_command')
     def test_state_present_no_label_diff(self, m_run_command, m_exit_json, m_get_current_state):
@@ -142,7 +142,7 @@ osd                  7"""
         assert result['stdout'] == stdout
         assert result['rc'] == 0
 
-    @patch('ceph_orch_host.get_current_state')
+    @patch('ansible_collections.ceph.cephadm.plugins.modules.ceph_orch_host.get_current_state')
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     @patch('ansible.module_utils.basic.AnsibleModule.run_command')
     def test_state_present_label_diff(self, m_run_command, m_exit_json, m_get_current_state):
@@ -177,7 +177,7 @@ osd                  7"""
         assert 'label2' in result['stdout']
         assert result['rc'] == 0
 
-    @patch('ceph_orch_host.get_current_state')
+    @patch('ansible_collections.ceph.cephadm.plugins.modules.ceph_orch_host.get_current_state')
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     @patch('ansible.module_utils.basic.AnsibleModule.run_command')
     def test_state_present_label_diff_error(self, m_run_command, m_exit_json, m_get_current_state):

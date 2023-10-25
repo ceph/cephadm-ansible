@@ -1,0 +1,165 @@
+---
+- name: load variables
+  hosts: all
+  become: false
+  tasks:
+    - include_vars: deploy-cluster-vars.yml
+
+- name: gather facts and prepare system for cephadm
+  hosts:
+    - mons
+    - mgrs
+    - osds
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph_defaults
+
+    - name: gather and delegate facts
+      setup:
+        gather_subset:
+          - 'all'
+          - '!facter'
+          - '!ohai'
+      delegate_to: "{{ item }}"
+      delegate_facts: true
+      with_items: "{{ groups['all'] }}"
+      run_once: true
+      when: delegate_facts_host | bool
+
+    - name: container registry authentication
+      cephadm_registry_login:
+        registry_url: "{{ ceph_container_registry }}"
+        registry_username: "{{ ceph_container_registry_username }}"
+        registry_password: "{{ ceph_container_registry_password }}"
+      environment:
+        HTTP_PROXY: "{{ ceph_container_http_proxy | default('') }}"
+        HTTPS_PROXY: "{{ ceph_container_https_proxy | default('') }}"
+        NO_PROXY: "{{ ceph_container_no_proxy }}"
+      when: ceph_container_registry_auth | default(False) | bool
+
+- name: bootstrap the cluster
+  hosts: "{{ groups.get('mons')[0] }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph_defaults
+
+    - name: bootstrap initial cluster
+      cephadm_bootstrap:
+        mon_ip: "{{ monitor_address }}"
+        fsid: "{{ fsid if fsid is defined else omit }}"
+        pull: false
+
+- import_playbook: cephadm-distribute-ssh-key.yml
+  vars:
+    admin_node: "{{ groups.get('admin')[0] }}"
+
+- name: add the other nodes
+  hosts:
+    - mons
+    - mgrs
+    - osds
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph_defaults
+
+    - name: run cephadm prepare-host
+      command: cephadm prepare-host
+      changed_when: false
+
+    - name: add hosts
+      ceph_orch_host:
+        name: "{{ ansible_facts['hostname'] }}"
+        address: "{{ ansible_facts['default_ipv4']['address'] if inventory_hostname != 'ceph-node00' else omit }}"
+        set_admin_label: "{{ True if inventory_hostname in groups.get('admin', []) else omit }}"
+        labels: "{{ labels }}"
+      delegate_to: "{{ groups['mons'][0] }}"
+
+
+- name: adjust service placement
+  hosts: "{{ groups.get('mons')[0] }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph_defaults
+
+    - name: update the placement of monitor hosts
+      ceph_orch_apply:
+        spec: |
+          service_type: mon
+          service_id: mon
+          placement:
+            label: mons
+
+    - name: waiting for the monitor to join the quorum...
+      command: cephadm shell ceph quorum_status --format json
+      register: ceph_health_raw
+      changed_when: false
+      until: (ceph_health_raw.stdout | from_json)["quorum_names"] | length == groups.get('mons', []) | length
+      retries: "{{ health_mon_check_retries }}"
+      delay: "{{ health_mon_check_delay }}"
+
+    - name: update the placement of manager hosts
+      command: cephadm shell ceph orch apply mgr --placement=label:mgrs
+
+    - name: update the placement of osd hosts
+      ceph_orch_apply:
+        spec: |
+          service_type: osd
+          service_id: osd
+          placement:
+            label: osds
+          spec:
+            data_devices:
+              all: true
+
+    - name: update the placement of crash hosts
+      ceph_orch_apply:
+        spec: |
+          service_type: crash
+          service_id: crash
+          placement:
+            host_pattern: '*'
+
+    - name: enable the monitoring
+      command: "ceph {{ item }}"
+      changed_when: false
+      loop:
+        - "mgr module enable prometheus"
+        - "orch apply alertmanager --placement=label:monitoring"
+        - "orch apply grafana --placement=label:monitoring"
+        - "orch apply prometheus --placement=label:monitoring"
+        - "orch apply node-exporter --placement=*"
+
+- name: remove ceph-node5
+  hosts: "{{ groups.get('mons')[0] }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: drain ceph-node5
+      ceph_orch_host:
+        state: drain
+        name: ceph-node5
+
+    - name: remove ceph-node5
+      ceph_orch_host:
+        state: absent
+        name: ceph-node5
+      retries: 20
+      delay: 1
+      until: result is succeeded
+      register: result
+# TODO(guits): address the following tasks:
+    # - name: show ceph orchestrator services
+    #   command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
+    #   changed_when: false
+
+    # - name: show ceph orchestrator daemons
+    #   command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ps --refresh"
+    #   changed_when: false

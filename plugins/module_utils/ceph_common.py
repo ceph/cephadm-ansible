@@ -1,9 +1,8 @@
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Dict
+from typing import List, Dict
 
-if TYPE_CHECKING:
-    from ansible.module_utils.basic import AnsibleModule  # type: ignore
+from ansible.module_utils.basic import AnsibleModule  # type: ignore
 
 
 def retry(exceptions, retries=20, delay=1):

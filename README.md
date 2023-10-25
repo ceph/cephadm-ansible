@@ -1,4 +1,4 @@
-# cephadm-ansible
+# cephadm-ansible (ceph.cephadm)
 
 cephadm-ansible is a collection of Ansible playbooks to simplify
 workflows that are not covered by [cephadm]. The workflows covered

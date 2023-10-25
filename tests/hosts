@@ -1,0 +1,28 @@
+[ceph_cluster]
+ceph-node0 labels="['_admin', 'mons', 'mgrs', 'monitoring']"
+ceph-node1 labels="['mons', 'mgrs']"
+ceph-node2 labels="['mons', 'mgrs']"
+ceph-node3 labels="['rgws']"
+ceph-node4 labels="['osds']"
+ceph-node5 labels="['iscsigws']"
+
+[admin]
+ceph-node0
+
+[clients]
+client0
+client1
+
+# deploy-cluster.yml groups related
+[mons]
+ceph-node0
+ceph-node1
+ceph-node2
+
+[mgrs]
+ceph-node0
+
+[osds]
+ceph-node3
+ceph-node4
+ceph-node5

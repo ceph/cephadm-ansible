@@ -19,10 +19,8 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 from typing import List, Tuple
-try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd, fatal  # type: ignore
-except ImportError:
-    from module_utils.ceph_common import exit_module, build_base_cmd, fatal
+from ansible_collections.ceph.cephadm.plugins.module_utils.ceph_common import exit_module, build_base_cmd, fatal  # type: ignore
+
 import datetime
 
 ANSIBLE_METADATA = {
