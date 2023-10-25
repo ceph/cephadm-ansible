@@ -1,0 +1,13 @@
+---
+- hosts: "admin[0]"
+  become: true
+  gather_facts: false
+  tasks:
+    - name: wait all osd are up
+      command: cephadm shell -- ceph osd stat -f json
+      register: result
+      retries: 100
+      delay: 2
+      until:
+        - (result.stdout | from_json)["num_osds"] | int > 0
+        - (result.stdout | from_json)["num_osds"] == (result.stdout | from_json)["num_up_osds"]

@@ -1,4 +1,4 @@
-import ceph_common
+from ansible_collections.ceph.cephadm.plugins.module_utils import ceph_common
 import pytest
 from mock.mock import MagicMock
 

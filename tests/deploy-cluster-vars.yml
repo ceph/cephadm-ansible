@@ -1,0 +1,8 @@
+---
+cluster: ceph
+delegate_facts_host: true
+ceph_container_registry: quay.io
+ceph_container_registry_auth: false
+ceph_container_no_proxy: "localhost,127.0.0.1"
+health_mon_check_retries: 300
+health_mon_check_delay: 1
