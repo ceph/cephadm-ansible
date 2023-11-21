@@ -88,7 +88,7 @@
               yum_repository:
                 name: "ceph_stable_{{ item }}"
                 description: "{{ _ceph_repo.description }} - {{ item }}"
-                gpgcheck: yes
+                gpgcheck: true
                 state: present
                 gpgkey: "{{ _ceph_repo.rpm_key }}"
                 baseurl: "{{ _ceph_repo.baseurl }}/{{ item }}"
@@ -103,8 +103,13 @@
           block:
             - name: fetch ceph development repository
               uri:
-                url: https://shaman.ceph.com/api/repos/ceph/{{ ceph_dev_branch }}/{{ ceph_dev_sha1 }}/centos/{{ ansible_facts['distribution_major_version'] }}/repo?arch={{ ansible_facts['architecture'] }}  # noqa 204
-                return_content: yes
+                url:
+                  "https://shaman.ceph.com/api/repos/ceph/\
+                  {{ ceph_dev_branch }}/\
+                  {{ ceph_dev_sha1 }}/\
+                  centos/{{ ansible_facts['distribution_major_version'] }}/\
+                  repo?arch={{ ansible_facts['architecture'] }}"
+                return_content: true
               register: ceph_dev_yum_repo
 
             - name: configure ceph development repository
@@ -114,7 +119,7 @@
                 owner: root
                 group: root
                 mode: '0644'
-                backup: yes
+                backup: true
 
             - name: remove ceph_stable repositories
               yum_repository:
@@ -175,7 +180,7 @@
           dnf:
             name: "{{ packages_to_uninstall }}"
             state: absent
-            autoremove: no
+            autoremove: false
 
         - name: install ceph-common on rhel
           package:
@@ -195,7 +200,7 @@
           service:
             name: chronyd
             state: started
-            enabled: yes
+            enabled: true
 
     - name: Ubuntu related tasks
       when: ansible_facts['distribution'] == 'Ubuntu'
@@ -206,7 +211,7 @@
               apt:
                 name: ca-certificates
                 state: latest
-                update_cache: yes
+                update_cache: true
               register: result
               until: result is succeeded
 
@@ -221,7 +226,7 @@
                 repo: "deb https://download.ceph.com/debian-{{ ceph_release }}/ {{ ansible_facts['distribution_release'] }} main"
                 state: present
                 filename: ceph
-                update_cache: no
+                update_cache: false
 
             - name: configure Ceph testing repository
               when: ceph_origin == 'testing'
@@ -229,7 +234,7 @@
                 repo: "deb https://download.ceph.com/debian-testing/ {{ ansible_facts['distribution_release'] }} main"
                 state: present
                 filename: ceph
-                update_cache: no
+                update_cache: false
 
             - name: configure Ceph custom repositories
               when: ceph_origin == 'custom'
@@ -237,14 +242,14 @@
                 repo: "deb {{ item.baseurl }}/ {{ ansible_facts['distribution_release'] }} {{ item.components }}"
                 state: "{{ item.state | default(omit) }}"
                 filename: ceph_custom
-                update_cache: no
+                update_cache: false
               loop: "{{ ceph_custom_repositories }}"
 
         - name: install prerequisites packages
           apt:
             name: "{{ ['python3','cephadm','ceph-common'] }}"
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
-            update_cache: yes
+            update_cache: true
           register: result
           until: result is succeeded
 
@@ -255,7 +260,7 @@
               apt:
                 name: podman
                 state: present
-                update_cache: yes
+                update_cache: true
               register: result
               until: result is succeeded
 
@@ -283,13 +288,13 @@
                     repo: "deb https://download.docker.com/linux/ubuntu {{ ansible_facts['distribution_release'] }} stable"
                     state: present
                     filename: docker
-                    update_cache: no
+                    update_cache: false
 
                 - name: install docker
                   apt:
                     name: "{{ item }}"
                     state: present
-                    update_cache: yes
+                    update_cache: true
                   register: result
                   until: result is succeeded
                   loop:
