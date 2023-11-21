@@ -25,10 +25,11 @@
   become: true
   gather_facts: true
   vars:
-    repos_to_disable:
+    repos_4_to_disable:
       - rhceph-4-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
       - rhceph-4-mon-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
       - rhceph-4-osd-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
+    repos_5_to_disable:
       - rhceph-5-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
     packages_to_uninstall:
       - ceph-mds
@@ -52,9 +53,16 @@
               rhsm_repository:
                 name: "rhceph-{{ ceph_rhcs_version }}-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms"
 
-            - name: disable older rhceph repositories if any
+            - name: disable older rhceph repositories if any on RHEL{{ansible_facts['distribution_major_version']}}
+              when: ansible_facts['distribution_major_version'] == '8'
               rhsm_repository:
-                name: "{{ repos_to_disable }}"
+                name: "{{ repos_4_to_disable + repos_5_to_disable }}"
+                state: absent
+
+            - name: disable older rhceph repositories if any on RHEL{{ansible_facts['distribution_major_version']}}
+              when: ansible_facts['distribution_major_version'] == '9'
+              rhsm_repository:
+                name: "{{ repos_5_to_disable }}"
                 state: absent
 
         - name: enable ceph package repositories
