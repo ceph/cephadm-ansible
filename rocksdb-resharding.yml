@@ -67,6 +67,9 @@
           command: "{{ cephadm_cmd }} orch ps --daemon_type osd --daemon_id {{ osd_id }} --format json"
           changed_when: false
           register: ceph_orch_ps
+          retries: 120
+          delay: 1
+          until: (ceph_orch_ps.stdout | from_json)[0]['status_desc'] == 'running'
 
         - name: set_fact container_image, container_host
           set_fact:
