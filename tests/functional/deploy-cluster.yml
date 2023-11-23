@@ -52,6 +52,7 @@
         mon_ip: "{{ monitor_address }}"
         fsid: "{{ fsid if fsid is defined else omit }}"
         pull: false
+      register: bootstrap_details
 
 - import_playbook: cephadm-distribute-ssh-key.yml
   vars:
@@ -155,6 +156,19 @@
       delay: 1
       until: result is succeeded
       register: result
+
+- name: adjust service placement
+  hosts: "{{ groups.get('mons')[0] }}"
+  become: true
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ceph_defaults
+
+    - name: print bootstrap details
+      debug:
+        msg: "{{ bootstrap_details }}"
+
 # TODO(guits): address the following tasks:
     # - name: show ceph orchestrator services
     #   command: "{{ cephadm_cmd }} shell -- ceph --cluster {{ cluster }} orch ls --refresh"
