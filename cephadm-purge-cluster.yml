@@ -30,7 +30,7 @@
       fail:
         msg: |
           You must define a group [admin] in your inventory and add a node where
-          admin keyring is present at /etc/ceph/admin.client.keyring
+          admin keyring is present at /etc/ceph/ceph.client.admin.keyring
       when: "'admin' not in groups or groups['admin'] | length < 1"
 
 
@@ -40,12 +40,12 @@
   any_errors_fatal: true
   tasks:
 
-    - name: check /etc/ceph/ceph.admin.client.keyring
+    - name: check /etc/ceph/ceph.client.admin.keyring
       stat:
         path: /etc/ceph/ceph.client.admin.keyring
       register: admin_keyring_stat
 
-    - name: fail if /etc/ceph/admin.client.keyring is not present
+    - name: fail if /etc/ceph/ceph.client.admin.keyring is not present
       fail:
         msg: >
           You must have /etc/ceph/ceph.client.admin.keyring present on {{ inventory_hostname }}
