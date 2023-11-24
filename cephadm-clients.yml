@@ -26,39 +26,41 @@
 
 
 - name: Confirm local readiness
-  hosts: localhost
+  hosts: all
   gather_facts: false
   tasks:
+    - run_once: true
+      delegate_to: localhost
+      block:
+        - name: import_role ceph_defaults
+          import_role:
+            name: ceph_defaults
 
-    - name: import_role ceph_defaults
-      import_role:
-        name: ceph_defaults
+        - name: fail if the fsid parameter is missing
+          fail:
+            msg: >
+              You must supply an 'fsid' parameter for the corresponding ceph cluster
+          when: fsid is undefined
 
-    - name: fail if the fsid parameter is missing
-      fail:
-        msg: >
-          You must supply an 'fsid' parameter for the corresponding ceph cluster
-      when: fsid is undefined
+        - name: fail if admin group doesn't exist or is empty
+          fail:
+            msg: |
+              You must define a group [admin] in your inventory which provides the
+              keyring that you want to distribute
+          when: "'admin' not in groups or groups['admin'] | length < 1"
 
-    - name: fail if admin group doesn't exist or is empty
-      fail:
-        msg: |
-          You must define a group [admin] in your inventory which provides the
-          keyring that you want to distribute
-      when: "'admin' not in groups or groups['admin'] | length < 1"
+        - name: fail if client_group is NOT in the inventory
+          fail:
+            msg: >
+              Variable client_group '{{ client_group }}' is not defined in the inventory
+          when: client_group not in groups
 
-    - name: fail if client_group is NOT in the inventory
-      fail:
-        msg: >
-          Variable client_group '{{ client_group }}' is not defined in the inventory
-      when: client_group not in groups
-
-    - name: fail if keyring variable is missing
-      fail:
-        msg: |
-          You must supply a 'keyring' variable that defines the path to the key
-          that you want to distribute to your client machines
-      when: keyring is not defined
+        - name: fail if keyring variable is missing
+          fail:
+            msg: |
+              You must supply a 'keyring' variable that defines the path to the key
+              that you want to distribute to your client machines
+          when: keyring is not defined
 
 
 - name: Confirm admin host is ready

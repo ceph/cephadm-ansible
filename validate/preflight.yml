@@ -6,29 +6,33 @@
 - ansible.builtin.import_playbook: insecure-registries.yml
   when: set_insecure_registries | default(false) | bool
 
-- hosts: localhost
+- name: preflight
+  hosts: all
   become: false
   gather_facts: false
   tasks:
-    - name: import_role ceph_defaults
-      import_role:
-        name: ceph_defaults
+    - run_once: true
+      delegate_to: localhost
+      block:
+        - name: import_role ceph_defaults
+          import_role:
+            name: ceph_defaults
 
-    - name: fail when ceph_origin is custom with no repository defined
-      fail:
-        msg: "You must define 'ceph_custom_repositories' or 'custom_repo_url' when ceph_origin is 'custom'"
-      when:
-        - ceph_origin == 'custom'
-        - (custom_repo_url is undefined or custom_repo_url == '')
-        - ceph_custom_repositories is undefined
+        - name: fail when ceph_origin is custom with no repository defined
+          fail:
+            msg: "You must define 'ceph_custom_repositories' or 'custom_repo_url' when ceph_origin is 'custom'"
+          when:
+            - ceph_origin == 'custom'
+            - (custom_repo_url is undefined or custom_repo_url == '')
+            - ceph_custom_repositories is undefined
 
-    - name: fail if baseurl is not defined for ceph_custom_repositories
-      fail:
-        msg: "One repository is missing a required parameter: name, description, baseurl."
-      loop: "{{ ceph_custom_repositories }}"
-      when:
-        - ceph_origin == 'custom'
-        - ceph_custom_repositories is defined
-        - (item.baseurl is undefined
-          or item.name is undefined
-          or item.description is undefined)
+        - name: fail if baseurl is not defined for ceph_custom_repositories
+          fail:
+            msg: "One repository is missing a required parameter: name, description, baseurl."
+          loop: "{{ ceph_custom_repositories }}"
+          when:
+            - ceph_origin == 'custom'
+            - ceph_custom_repositories is defined
+            - (item.baseurl is undefined
+              or item.name is undefined
+              or item.description is undefined)
