@@ -22,32 +22,39 @@
 # rocksdb_sharding_parameters : the rocksdb sharding parameter to set. Default is 'm(3) p(3,0-12) O(3,0-13) L P'.
 # docker : bool to be set in order to use docker engine instead. Default is False.
 
-- hosts: localhost
+- name: rocksdb-resharding
+  hosts: all
   become: true
   gather_facts: false
   tasks:
-    - name: fail if osd_id is not defined
-      fail:
-        msg: "you must provide 'osd_id' variable"
-      when: osd_id is undefined
+    - name: check prerequisites
+      run_once: true
+      delegate_to: localhost
+      block:
+        - name: fail if osd_id is not defined
+          fail:
+            msg: "you must provide 'osd_id' variable"
+          when: osd_id is undefined
 
-    - name: fail if admin_node is not defined
-      fail:
-        msg: "you must pass 'admin_node' variable"
-      when: admin_node is not defined
+        - name: fail if admin_node is not defined
+          fail:
+            msg: "you must pass 'admin_node' variable"
+          when: admin_node is not defined
+
+        - name: fail if osd_id isn't an id
+          fail:
+            msg: "osd_id must be an id"
+          when: not osd_id is regex('^\d+$')
+
+        - name: set_fact cephadm_cmd
+          set_fact:
+            cephadm_cmd: "cephadm {{ '--docker' if docker | default(False) | bool else '' }} shell ceph"
+
 
     - name: test connectivity to admin node
       ping:
       delegate_to: "{{ admin_node }}"
-
-    - name: fail if osd_id isn't an id
-      fail:
-        msg: "osd_id must be an id"
-      when: not osd_id is regex('^\d+$')
-
-    - name: set_fact cephadm_cmd
-      set_fact:
-        cephadm_cmd: "cephadm {{ '--docker' if docker | default(False) | bool else '' }} shell ceph"
+      run_once: true
 
     - name: get details about the osd daemon
       delegate_to: "{{ admin_node }}"
@@ -89,6 +96,7 @@
 
     - name: resharding operations
       delegate_to: "{{ container_host }}"
+      run_once: true
       block:
         - name: check fs consistency with fsck before resharding
           command: "{{ ceph_bluestore_tool_cmd }} fsck"
