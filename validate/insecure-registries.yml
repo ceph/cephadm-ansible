@@ -3,11 +3,14 @@
 # SPDX-License-Identifier: Apache-2.0
 # Author: Guillaume Abrioux <gabrioux@redhat.com>
 
-- hosts: localhost
+- name: insecure_registries
+  hosts: all
   become: false
   gather_facts: false
   tasks:
     - name: fail if insecure_registry is undefined
+      run_once: true
+      delegate_to: localhost
       fail:
         msg: "'insecure_registry' is undefined, it must be set when 'set_insecure_registries' is 'true'."
       when:
