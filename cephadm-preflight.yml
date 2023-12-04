@@ -189,12 +189,22 @@
           register: result
           until: result is succeeded
 
-        - name: install prerequisites packages
+        - name: install prerequisites packages on servers
           package:
-            name: "{{ ceph_pkgs }}"
+            name: "{{ ceph_pkgs + infra_pkgs }}"
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
           register: result
           until: result is succeeded
+          when: group_names != [client_group]
+
+        - name: install prerequisites packages on clients
+          package:
+            name: "{{ ceph_client_pkgs }}"
+            state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
+          register: result
+          until: result is succeeded
+          when: group_names == [client_group]
+
 
         - name: ensure chronyd is running
           service:
