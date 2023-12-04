@@ -12,11 +12,12 @@ ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/RPM-GPG-K
 ceph_release: quincy
 upgrade_ceph_packages: false
 ceph_pkgs:
-  - chrony
   - cephadm
-  - podman
   - ceph-common
 ceph_client_pkgs:
   - chrony
   - ceph-common
+infra_pkgs:
+  - chrony
+  - podman
 client_group: clients

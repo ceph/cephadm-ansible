@@ -9,7 +9,7 @@
 #
 # Usage:
 #
-# ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid>
+# ansible-playbook -i <inventory host file> cephadm-purge-cluster.yml -e fsid=<your fsid> -e infra_pkgs_purge=<infra packages to uninstall>
 
 
 - name: check local prerequisites are in place
@@ -55,7 +55,7 @@
 
 
 - name: check cluster hosts have cephadm and the required fsid {{ fsid }}
-  hosts: all
+  hosts: all,!{{ client_group }}
   gather_facts: false
   become: true
   any_errors_fatal: true
@@ -70,7 +70,6 @@
       register: cephadm_exists
       changed_when: false
       failed_when: false
-      when: group_names != [client_group]
 
     - name: fail if cephadm is not available
       fail:
@@ -78,14 +77,12 @@
           The cephadm binary is missing on {{ inventory_hostname }}. To purge the cluster you must have cephadm installed
           on ALL ceph hosts. Install manually or use the preflight playbook.
       when:
-        - group_names != [client_group]
         - cephadm_exists.rc
 
     - name: check fsid directory given is valid across the cluster
       stat:
         path: /var/lib/ceph/{{ fsid }}
       register: fsid_exists
-      when: group_names != [client_group]
 
     - name: fail if the fsid directory is missing
       fail:
@@ -93,7 +90,6 @@
           The fsid directory '/var/lib/ceph/{{ fsid }}' can not be found on {{ inventory_hostname }}
           Is the fsid correct?
       when:
-        - group_names != [client_group]
         - not fsid_exists.stat.exists | bool
 
 
@@ -133,7 +129,7 @@
 
 
 - name: Purge ceph daemons from all hosts in the cluster
-  hosts: all
+  hosts: all,!{{ client_group }}
   become: true
   gather_facts: false
   any_errors_fatal: true
@@ -144,7 +140,7 @@
 
     - name: purge ceph daemons
       command: "cephadm rm-cluster --force --zap-osds --fsid {{ fsid }}"
-      when: group_names != [client_group]
+      changed_when: false
 
 
 - name: remove ceph packages
@@ -157,9 +153,19 @@
       import_role:
         name: ceph_defaults
 
-    - name: remove ceph packages
+    - name: remove ceph packages on ceph nodes
       package:
-        name: "{{ 'ceph-common' if group_names == [client_group] else ceph_pkgs | unique }}"
+        name: "{{ ceph_pkgs | union(infra_pkgs | intersect(infra_pkgs_purge | default([]))) }}"
         state: absent
       register: result
       until: result is succeeded
+      when: group_names != [client_group]
+
+    - name: remove ceph packages on client nodes
+      package:
+        name: ceph-common
+        state: absent
+      register: result
+      until: result is succeeded
+      when: group_names == [client_group]
+
