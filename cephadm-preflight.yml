@@ -44,7 +44,7 @@
         name: ceph_defaults
 
     - name: redhat family of OS related tasks
-      when: ansible_facts['distribution'] == 'CentOS' or ansible_facts['distribution'] == 'RedHat'
+      when: ansible_facts['os_family'] == 'RedHat'
       block:
         - name: rhcs related tasks
           when: ceph_origin == 'rhcs'
@@ -163,7 +163,7 @@
               loop: "{{ ceph_custom_repositories }}"
 
         - name: install epel-release
-          when: ansible_facts['distribution'] == 'CentOS'
+          when: ansible_facts['distribution'] != 'RedHat'
           block:
             - name: enable required CentOS repository for epel
               command: dnf config-manager --set-enabled "{{ 'powertools' if ansible_facts['distribution_major_version'] == '8' else 'crb' }}"
@@ -257,11 +257,17 @@
 
         - name: install prerequisites packages
           apt:
-            name: "{{ ['python3','cephadm','ceph-common'] }}"
+            name: "{{ ['python3','chrony'] + ceph_pkgs }}"
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
             update_cache: true
           register: result
           until: result is succeeded
+
+        - name: ensure chronyd is running
+          service:
+            name: chronyd
+            state: started
+            enabled: true
 
         - name: install container engine
           block:
