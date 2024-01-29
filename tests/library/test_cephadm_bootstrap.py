@@ -23,7 +23,7 @@ class TestCephadmBootstrapModule(object):
             cephadm_bootstrap.main()
 
         result = result.value.args[0]
-        assert result['msg'] == 'missing required arguments: mon_ip'
+        assert result['msg'] == 'one of the following is required: mon_ip, mon_addrv'
 
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
     def test_with_check_mode(self, m_exit_json):
@@ -145,7 +145,7 @@ class TestCephadmBootstrapModule(object):
 
         result = result.value.args[0]
         assert result['changed']
-        assert result['cmd'] == ['cephadm', 'bootstrap', '--mon-ip', fake_ip, '--fsid', fake_fsid]
+        assert result['cmd'] == ['cephadm', 'bootstrap', '--fsid', fake_fsid, '--mon-ip', fake_ip]
         assert result['rc'] == 0
 
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
@@ -189,7 +189,7 @@ class TestCephadmBootstrapModule(object):
 
         result = result.value.args[0]
         assert result['changed']
-        assert result['cmd'] == ['cephadm', 'bootstrap', '--mon-ip', fake_ip, '--initial-dashboard-user', 'foo', '--initial-dashboard-password', 'bar']
+        assert result['cmd'] == ['cephadm', 'bootstrap', '--mon-ip', fake_ip, '--dashboard-user', 'foo', '--dashboard-password', 'bar']
         assert result['rc'] == 0
 
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
@@ -276,9 +276,9 @@ class TestCephadmBootstrapModule(object):
         result = result.value.args[0]
         assert result['changed']
         assert result['cmd'] == ['cephadm', 'bootstrap', '--mon-ip', fake_ip,
+                                 '--registry-password', fake_registry_pass,
                                  '--registry-url', fake_registry,
-                                 '--registry-username', fake_registry_user,
-                                 '--registry-password', fake_registry_pass]
+                                 '--registry-username', fake_registry_user]
         assert result['rc'] == 0
 
     @patch('ansible.module_utils.basic.AnsibleModule.exit_json')
