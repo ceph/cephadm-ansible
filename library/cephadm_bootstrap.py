@@ -1,3 +1,6 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+
 # Copyright Red Hat
 # SPDX-License-Identifier: Apache-2.0
 #
@@ -123,6 +126,7 @@ options:
         required: false
 author:
     - Dimitri Savineau <dsavinea@redhat.com>
+    - Teoman ONAY <tonay@ibm.com>
 '''
 
 EXAMPLES = '''
@@ -149,59 +153,92 @@ EXAMPLES = '''
 RETURN = '''#  '''
 
 
-def main() -> None:
+def run_module() -> None:
+
+    backward_compat = dict(
+        dashboard=dict(type='bool', required=False, remove_in_version='4.0.0'),
+        firewalld=dict(type='bool', required=False, remove_in_version='4.0.0'),
+        monitoring=dict(type='bool', required=False, remove_in_version='4.0.0'),
+        pull=dict(type='bool', required=False, remove_in_version='4.0.0'),
+        dashboard_password=dict(type='str', required=False, no_log=True),  # noqa: E501
+        dashboard_user=dict(type='str', required=False),
+    )
+
+    cephadm_params = dict(
+        docker=dict(type='bool', required=False, default=False),
+        image=dict(type='str', required=False),
+    )
+
+    cephadm_bootstrap_params = dict(
+        allow_fqdn_hostname=dict(type='bool', required=False, default=False),
+        allow_mismatched_release=dict(type='bool', required=False),
+        allow_overwrite=dict(type='bool', required=False, default=False),
+        apply_spec=dict(type='str', required=False),
+        cluster_network=dict(type='str', required=False),
+        config=dict(type='str', required=False),
+        dashboard_crt=dict(type='str', required=False),
+        dashboard_key=dict(type='str', required=False),
+        dashboard_password_noupdate=dict(type='bool', required=False),
+        fsid=dict(type='str', required=False),
+        initial_dashboard_password=dict(type='str', required=False, no_log=True),  # noqa: E501
+        initial_dashboard_user=dict(type='str', required=False),
+        log_to_file=dict(type='bool', required=False),
+        mgr_id=dict(type='str', required=False),
+        mon_addrv=dict(type='str', required=False),
+        mon_id=dict(type='str', required=False),
+        mon_ip=dict(type='str', required=False),
+        no_cleanup_on_failure=dict(type='bool', required=False),
+        no_minimize_config=dict(type='bool', required=False),
+        orphan_initial_daemons=dict(type='bool', required=False),
+        output_config=dict(type='str', required=False),
+        output_dir=dict(type='str', required=False),
+        output_keyring=dict(type='str', required=False),
+        output_pub_ssh_key=dict(type='str', required=False),
+        registry_json=dict(type='str', required=False),
+        registry_password=dict(type='str', required=False, no_log=True),
+        registry_url=dict(type='str', required=False),
+        registry_username=dict(type='str', required=False),
+        shared_ceph_folder=dict(type='str', required=False),
+        single_host_defaults=dict(type='bool', required=False),
+        skip_admin_label=dict(type='bool', required=False),
+        skip_dashboard=dict(type='bool', required=False, default=False),
+        skip_firewalld=dict(type='bool', required=False, default=False),
+        skip_monitoring_stack=dict(type='bool', required=False, default=False),
+        skip_mon_network=dict(type='bool', required=False),
+        skip_ping_check=dict(type='bool', required=False),
+        skip_prepare_host=dict(type='bool', required=False),
+        skip_pull=dict(type='bool', required=False),
+        skip_ssh=dict(type='bool', required=False),
+        ssh_config=dict(type='str', required=False),
+        ssh_private_key=dict(type='str', required=False),
+        ssh_public_key=dict(type='str', required=False),
+        ssh_signed_cert=dict(type='str', required=False),
+        ssh_user=dict(type='str', required=False),
+        ssl_dashboard_port=dict(type='str', required=False),
+        with_centralized_logging=dict(type='bool', required=False),
+    )
+
     module = AnsibleModule(
-        argument_spec=dict(
-            mon_ip=dict(type='str', required=True),
-            image=dict(type='str', required=False),
-            docker=dict(type='bool', required=False, default=False),
-            fsid=dict(type='str', required=False),
-            pull=dict(type='bool', required=False, default=True),
-            dashboard=dict(type='bool', required=False, default=True),
-            dashboard_user=dict(type='str', required=False),
-            dashboard_password=dict(type='str', required=False, no_log=True),
-            monitoring=dict(type='bool', required=False, default=True),
-            firewalld=dict(type='bool', required=False, default=True),
-            allow_overwrite=dict(type='bool', required=False, default=False),
-            registry_url=dict(type='str', require=False),
-            registry_username=dict(type='str', require=False),
-            registry_password=dict(type='str', require=False, no_log=True),
-            registry_json=dict(type='path', require=False),
-            ssh_user=dict(type='str', required=False),
-            ssh_config=dict(type='str', required=False),
-            allow_fqdn_hostname=dict(type='bool', required=False, default=False),
-            cluster_network=dict(type='str', required=False),
-        ),
+        argument_spec={**cephadm_params,
+                       **cephadm_bootstrap_params,
+                       **backward_compat},
         supports_check_mode=True,
         mutually_exclusive=[
             ('registry_json', 'registry_url'),
             ('registry_json', 'registry_username'),
             ('registry_json', 'registry_password'),
+            ('mon_addrv', 'mon_ip'),
         ],
         required_together=[
-            ('registry_url', 'registry_username', 'registry_password')
+            ('registry_url', 'registry_username', 'registry_password'),
+            ('initial_dashboard_user', 'initial_dashboard_password'),
         ],
+        required_one_of=[('mon_ip', 'mon_addrv'),
+                         ],
     )
 
-    mon_ip = module.params.get('mon_ip')
-    docker = module.params.get('docker')
-    image = module.params.get('image')
     fsid = module.params.get('fsid')
-    pull = module.params.get('pull')
-    dashboard = module.params.get('dashboard')
-    dashboard_user = module.params.get('dashboard_user')
-    dashboard_password = module.params.get('dashboard_password')
-    monitoring = module.params.get('monitoring')
-    firewalld = module.params.get('firewalld')
     allow_overwrite = module.params.get('allow_overwrite')
-    registry_url = module.params.get('registry_url')
-    registry_username = module.params.get('registry_username')
-    registry_password = module.params.get('registry_password')
-    registry_json = module.params.get('registry_json')
-    ssh_user = module.params.get('ssh_user')
-    ssh_config = module.params.get('ssh_config')
-    allow_fqdn_hostname = module.params.get('allow_fqdn_hostname')
-    cluster_network = module.params.get('cluster_network')
 
     startd = datetime.datetime.now()
 
@@ -211,9 +248,15 @@ def main() -> None:
     ceph_keyring = 'ceph.client.admin.keyring'
     ceph_pubkey = 'ceph.pub'
 
+    def extend_append(key: str, parameters: dict) -> None:
+        if parameters[key]["type"] == 'bool':
+            cmd.append("--" + k.replace('_', '-'))
+        else:
+            cmd.extend(["--" + k.replace('_', '-'), module.params.get(k)])
+
     if fsid:
         if os.path.exists(os.path.join(data_dir, fsid)):
-            out = 'A cluster with fsid {} is already deployed.'.format(fsid)
+            out = f"A cluster with fsid {fsid} is already deployed."
             exit_module(
                 rc=0,
                 startd=startd,
@@ -238,56 +281,40 @@ def main() -> None:
                     changed=False
                 )
 
-    if docker:
-        cmd.append('--docker')
+    for k in cephadm_params:
+        if module.params.get(k):
+            extend_append(k, cephadm_params)
 
-    if image:
-        cmd.extend(['--image', image])
+    cmd.extend(['bootstrap'])
 
-    cmd.extend(['bootstrap', '--mon-ip', mon_ip])
+    for k in cephadm_bootstrap_params:
+        if module.params.get(k):
+            extend_append(k, cephadm_bootstrap_params)
 
-    if fsid:
-        cmd.extend(['--fsid', fsid])
-
-    if not pull:
-        cmd.append('--skip-pull')
-
-    if dashboard:
-        if dashboard_user:
-            cmd.extend(['--initial-dashboard-user', dashboard_user])
-        if dashboard_password:
-            cmd.extend(['--initial-dashboard-password', dashboard_password])
-    else:
-        cmd.append('--skip-dashboard')
-
-    if not monitoring:
-        cmd.append('--skip-monitoring-stack')
-
-    if not firewalld:
-        cmd.append('--skip-firewalld')
-
-    if allow_overwrite:
-        cmd.append('--allow-overwrite')
-
-    if registry_url and registry_username and registry_password:
-        cmd.extend(['--registry-url', registry_url,
-                    '--registry-username', registry_username,
-                    '--registry-password', registry_password])
-
-    if registry_json:
-        cmd.extend(['--registry-json', registry_json])
-
-    if ssh_user:
-        cmd.extend(['--ssh-user', ssh_user])
-
-    if ssh_config:
-        cmd.extend(['--ssh-config', ssh_config])
-
-    if allow_fqdn_hostname:
-        cmd.append('--allow-fqdn-hostname')
-
-    if cluster_network:
-        cmd.extend(['--cluster-network', cluster_network])
+    # keep backward compatibility
+    for k in backward_compat:
+        result = module.params.get(k)
+        if result is not None:
+            if k == 'pull' and not result:
+                if '--skip-pull' not in cmd:
+                    cmd.append('--skip-pull')
+            elif k == 'monitoring' and not result:
+                if '--skip-monitoring-stack' not in cmd:
+                    cmd.append('--skip-monitoring-stack')
+            elif k == 'firewalld' and not result:
+                if '--skip-firewalld' not in cmd:
+                    cmd.append('--skip-firewalld')
+            elif k == 'dashboard':
+                if result:
+                    if 'dashboard-user' not in cmd:
+                        cmd.extend(['--dashboard-user',
+                                    module.params.get('dashboard_user'),
+                                    '--dashboard-password',
+                                    module.params.get('dashboard_password'),  # noqa: E501
+                                    ])
+                else:
+                    if '--skip-dashboard' not in cmd:
+                        cmd.append('--skip-dashboard')
 
     if module.check_mode:
         exit_module(
@@ -310,6 +337,10 @@ def main() -> None:
             startd=startd,
             changed=True
         )
+
+
+def main():
+    run_module()
 
 
 if __name__ == '__main__':
