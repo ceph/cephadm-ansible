@@ -3,7 +3,7 @@
 # Author: Guillaume Abrioux <gabrioux@redhat.com>
 
 from __future__ import absolute_import, division, print_function
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple, Union
 __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
@@ -97,7 +97,7 @@ def set_option(module: "AnsibleModule",
     return rc, cmd, out.strip(), err
 
 
-def get_config_dump(module: "AnsibleModule"):
+def get_config_dump(module: "AnsibleModule") -> Tuple[int, List[str], str, str]:
     cmd = build_base_cmd_shell(module)
     cmd.extend(['ceph', 'config', 'dump', '--format', 'json'])
     rc, out, err = module.run_command(cmd)
@@ -107,7 +107,7 @@ def get_config_dump(module: "AnsibleModule"):
     return rc, cmd, out, err
 
 
-def get_current_value(who, option, config_dump):
+def get_current_value(who: str, option: str, config_dump: List[Dict[str, Any]]) -> Union[str, None]:
     for config in config_dump:
         if config['section'] == who and config['name'] == option:
             return config['value']

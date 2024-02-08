@@ -82,7 +82,7 @@ def apply_spec(module: "AnsibleModule",
     return rc, cmd, out, err
 
 
-def main():
+def main() -> None:
     module = AnsibleModule(
         argument_spec=dict(
             fsid=dict(type='str', required=False),
