@@ -1,14 +1,16 @@
 import datetime
 import time
-from typing import TYPE_CHECKING, List, Dict
+from typing import TYPE_CHECKING, Any, List, Dict, Callable, Type, TypeVar
 
 if TYPE_CHECKING:
     from ansible.module_utils.basic import AnsibleModule  # type: ignore
 
+ExceptionType = TypeVar('ExceptionType', bound=BaseException)
 
-def retry(exceptions, retries=20, delay=1):
-    def decorator(f):
-        def _retry(*args, **kwargs):
+
+def retry(exceptions: Type[ExceptionType], retries: int = 20, delay: int = 1) -> Callable:
+    def decorator(f: Callable) -> Callable:
+        def _retry(*args: Any, **kwargs: Any) -> Callable:
             _tries = retries
             while _tries > 1:
                 try:
