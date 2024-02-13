@@ -249,14 +249,14 @@ def run_module() -> None:
     ceph_pubkey = 'ceph.pub'
 
     def extend_append(key: str, parameters: dict) -> None:
-        if parameters[key]["type"] == 'bool':
-            cmd.append("--" + k.replace('_', '-'))
+        if parameters[key]['type'] == 'bool':
+            cmd.append('--' + k.replace('_', '-'))
         else:
-            cmd.extend(["--" + k.replace('_', '-'), module.params.get(k)])
+            cmd.extend(['--' + k.replace('_', '-'), module.params.get(k)])
 
     if fsid:
         if os.path.exists(os.path.join(data_dir, fsid)):
-            out = f"A cluster with fsid {fsid} is already deployed."
+            out = f'A cluster with fsid {fsid} is already deployed.'
             exit_module(
                 rc=0,
                 startd=startd,
@@ -270,8 +270,9 @@ def run_module() -> None:
               ceph_keyring,
               ceph_pubkey]:
         if not allow_overwrite:
-            if os.path.exists(os.path.join(data_dir, f)):
-                out = '{} already exists, skipping.'
+            path: str = os.path.join(data_dir, f)
+            if os.path.exists(path):
+                out = f'{path} already exists, skipping.'
                 exit_module(
                     rc=0,
                     startd=startd,
@@ -339,7 +340,7 @@ def run_module() -> None:
         )
 
 
-def main():
+def main() -> None:
     run_module()
 
 
