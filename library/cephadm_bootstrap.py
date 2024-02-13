@@ -270,8 +270,9 @@ def run_module() -> None:
               ceph_keyring,
               ceph_pubkey]:
         if not allow_overwrite:
-            if os.path.exists(os.path.join(data_dir, f)):
-                out = '{} already exists, skipping.'
+            path: str = os.path.join(data_dir, f)
+            if os.path.exists(path):
+                out = f'{path} already exists, skipping.'
                 exit_module(
                     rc=0,
                     startd=startd,
