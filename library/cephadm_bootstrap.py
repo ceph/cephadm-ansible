@@ -158,15 +158,33 @@ def run_module() -> None:
     backward_compat = dict(
         dashboard=dict(type='bool', required=False, remove_in_version='4.0.0'),
         firewalld=dict(type='bool', required=False, remove_in_version='4.0.0'),
-        monitoring=dict(type='bool', required=False, remove_in_version='4.0.0'),
+        monitoring=dict(type='bool',
+                        required=False,
+                        remove_in_version='4.0.0'),
         pull=dict(type='bool', required=False, remove_in_version='4.0.0'),
-        dashboard_password=dict(type='str', required=False, no_log=True),  # noqa: E501
+        dashboard_password=dict(type='str',
+                                required=False,
+                                no_log=True),
         dashboard_user=dict(type='str', required=False),
     )
 
     cephadm_params = dict(
         docker=dict(type='bool', required=False, default=False),
         image=dict(type='str', required=False),
+    )
+
+    cephadm_bootstrap_downstream_only = dict(
+        call_home_config=dict(type='str', required=False),
+        call_home_icn=dict(type='str', required=False),
+        ceph_call_home_contact_email=dict(type='str', required=False),
+        ceph_call_home_contact_first_name=dict(type='str', required=False),
+        ceph_call_home_contact_last_name=dict(type='str', required=False),
+        ceph_call_home_contact_phone=dict(type='str', required=False),
+        ceph_call_home_country_code=dict(type='str', required=False),
+        deploy_cephadm_agent=dict(type='bool', required=False),
+        enable_ibm_call_home=dict(type='bool', required=False),
+        enable_storage_insights=dict(type='bool', required=False),
+        storage_insights_config=dict(type='str', required=False),
     )
 
     cephadm_bootstrap_params = dict(
@@ -180,7 +198,9 @@ def run_module() -> None:
         dashboard_key=dict(type='str', required=False),
         dashboard_password_noupdate=dict(type='bool', required=False),
         fsid=dict(type='str', required=False),
-        initial_dashboard_password=dict(type='str', required=False, no_log=True),  # noqa: E501
+        initial_dashboard_password=dict(type='str',
+                                        required=False,
+                                        no_log=True),
         initial_dashboard_user=dict(type='str', required=False),
         log_to_file=dict(type='bool', required=False),
         mgr_id=dict(type='str', required=False),
@@ -216,6 +236,7 @@ def run_module() -> None:
         ssh_user=dict(type='str', required=False),
         ssl_dashboard_port=dict(type='str', required=False),
         with_centralized_logging=dict(type='bool', required=False),
+        **cephadm_bootstrap_downstream_only,
     )
 
     module = AnsibleModule(
@@ -242,17 +263,23 @@ def run_module() -> None:
 
     startd = datetime.datetime.now()
 
-    cmd = ['cephadm']
+    cmd: list[str] = []
     data_dir = '/var/lib/ceph'
     ceph_conf = 'ceph.conf'
     ceph_keyring = 'ceph.client.admin.keyring'
     ceph_pubkey = 'ceph.pub'
 
-    def extend_append(key: str, parameters: dict) -> None:
-        if parameters[key]['type'] == 'bool':
-            cmd.append('--' + k.replace('_', '-'))
-        else:
-            cmd.extend(['--' + k.replace('_', '-'), module.params.get(k)])
+    def extend_append(command: str, params: dict) -> list:
+        cmd: list[str] = []
+        cmd.append(command)
+        for k in params:
+            if module.params.get(k):
+                if params[k]['type'] == 'bool':
+                    cmd.append('--' + k.replace('_', '-'))
+                else:
+                    cmd.extend(['--' + k.replace('_', '-'),
+                                module.params.get(k)])
+        return cmd
 
     if fsid:
         if os.path.exists(os.path.join(data_dir, fsid)):
@@ -282,15 +309,10 @@ def run_module() -> None:
                     changed=False
                 )
 
-    for k in cephadm_params:
-        if module.params.get(k):
-            extend_append(k, cephadm_params)
-
-    cmd.extend(['bootstrap'])
-
-    for k in cephadm_bootstrap_params:
-        if module.params.get(k):
-            extend_append(k, cephadm_bootstrap_params)
+    # Build cephadm with parameters
+    cmd = extend_append('cephadm', cephadm_params)
+    # Extends with boostrap parameters
+    cmd.extend(extend_append('bootstrap', cephadm_bootstrap_params))
 
     # keep backward compatibility
     for k in backward_compat:
@@ -311,7 +333,7 @@ def run_module() -> None:
                         cmd.extend(['--dashboard-user',
                                     module.params.get('dashboard_user'),
                                     '--dashboard-password',
-                                    module.params.get('dashboard_password'),  # noqa: E501
+                                    module.params.get('dashboard_password'),
                                     ])
                 else:
                     if '--skip-dashboard' not in cmd:
