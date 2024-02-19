@@ -185,6 +185,7 @@ def run_module() -> None:
         enable_ibm_call_home=dict(type='bool', required=False),
         enable_storage_insights=dict(type='bool', required=False),
         storage_insights_config=dict(type='str', required=False),
+        storage_insights_tenant_id=dict(type='str', required=False),
     )
 
     cephadm_bootstrap_params = dict(
