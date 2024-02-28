@@ -169,7 +169,7 @@
               command: dnf config-manager --set-enabled "{{ 'powertools' if ansible_facts['distribution_major_version'] == '8' else 'crb' }}"
               changed_when: false
 
-            - name: install package
+            - name: install epel package
               package:
                 name: epel-release
                 state: present
@@ -195,7 +195,7 @@
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
           register: result
           until: result is succeeded
-          when: group_names != [client_group]
+          when: client_group not in group_names
 
         - name: install prerequisites packages on clients
           package:
@@ -203,8 +203,7 @@
             state: "{{ (upgrade_ceph_packages | bool) | ternary('latest', 'present') }}"
           register: result
           until: result is succeeded
-          when: group_names == [client_group]
-
+          when: client_group in group_names
 
         - name: ensure chronyd is running
           service:
