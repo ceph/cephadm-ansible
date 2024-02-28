@@ -20,4 +20,5 @@ ceph_client_pkgs:
 infra_pkgs:
   - chrony
   - podman
+  - lvm2
 client_group: clients
