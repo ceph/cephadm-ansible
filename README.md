@@ -1,13 +1,25 @@
 # cephadm-ansible
 
-cephadm-ansible is a collection of Ansible playbooks to simplify
-workflows that are not covered by [cephadm]. The workflows covered
-are:
+cephadm-ansible is a collection of Ansible playbooks and modules
+to simplify workflows that are not covered by [cephadm].
 
+Some examples of workflows covered with playbooks are the following:
+
+* Distribute ssh key: Copy an SSH public key to a specified user on remote hosts
 * Preflight: Initial setup of hosts before bootstrapping the cluster
 * Client: Setting up client hosts
 * Purge: Remove a Ceph cluster
+* RocksDB resharding: Reshard the rocksDB database for a given OSD
+* Insecure registry: Add registry as insecure to registries.conf
 
+This project provides some Ansible modules which allow you to write your own playbooks:
+
+* cephadm_registry_login: Log in to container registry
+* cephadm_bootstrap: Bootstrap a Ceph cluster using cephadm
+* ceph_orch_host: Add/Remove hosts (Can also add label(s) to hosts)
+* ceph_orch_apply: Apply a service spec
+* ceph_orch_daemon: Stop/Start daemon(s)
+* ceph_config: Set ceph configuration
 
 # Terminology
 **<ins>admin host</ins>:**\
