@@ -125,13 +125,13 @@
           {{ 'System has only ' ~ ansible_facts['memtotal_mb'] ~
           ' MB RAM, required: 8192MB' if ansible_facts['memtotal_mb'] | int < 8192 else 'N/A' }}
       swap:
-        required: "{{ ((ansible_facts['memtotal_mb'] | int * 1.5) | round) | int }}"
+        required: 4096
         actual: "{{ ansible_facts['swaptotal_mb'] | int }}"
-        result: "{{ 'PASS' if (ansible_facts['swaptotal_mb'] | int) >= ((ansible_facts['memtotal_mb'] * 1.5) | round) | int else 'FAIL' }}"
+        result: "{{ 'PASS' if (ansible_facts['swaptotal_mb'] | int) >= 4096 else 'FAIL' }}"
         reason: >-
           {{ 'System has only ' ~ ansible_facts['swaptotal_mb'] ~
-          ' MB Swap, required: ' ~ ((ansible_facts['memtotal_mb'] * 1.5) | round) | int ~ ' MB'
-          if ansible_facts['swaptotal_mb'] | int < ((ansible_facts['memtotal_mb'] * 1.5) | round) | int else 'N/A' }}
+          ' MB Swap, required: 4096 MB (4GB minimum per RHEL documentation)'
+          if ansible_facts['swaptotal_mb'] | int < 4096 else 'N/A' }}
     filesystem_checks:
       var_partition:
         result: "{{ 'PASS' if (ansible_facts['mounts'] | selectattr('mount', 'equalto', '/var') | list | length > 0) else 'FAIL' }}"
@@ -190,7 +190,7 @@
       {'Check': 'SELinux', 'Result': selinux_check, 'Reason': selinux_reason},
       {'Check': 'Required Packages Installed', 'Result': package_check, 'Reason': package_reason},
       {'Check': 'Minimum RAM (8GB)', 'Result': memory_checks['ram']['result'], 'Reason': memory_checks['ram']['reason']},
-      {'Check': 'Swap Space (1.5x RAM)', 'Result': memory_checks['swap']['result'], 'Reason': memory_checks['swap']['reason']},
+      {'Check': 'Swap Space (4GB minimum)', 'Result': memory_checks['swap']['result'], 'Reason': memory_checks['swap']['reason']},
       {'Check': 'CPU x86-64-v2', 'Result': cpu_checks['x86_64_v2']['result'], 'Reason': cpu_checks['x86_64_v2']['reason']},
       {'Check': 'CPU Cores >= 4', 'Result': cpu_checks['cores']['result'], 'Reason': cpu_checks['cores']['reason']},
       {'Check': '/var is a separate partition', 'Result': filesystem_checks['var_partition']['result'], 'Reason': filesystem_checks['var_partition']['reason']},
