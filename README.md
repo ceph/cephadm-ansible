@@ -179,7 +179,7 @@ Options:
 **default**: https://download.ceph.com/keys/release.asc
 
 `ceph_release`: The release of Ceph.
-**default**: pacific
+**default**: tentacle
 
 `ceph_dev_branch`: The development branch to be used in shaman when `ceph_origin` is 'shaman'.\
 **default**: main
