@@ -1,4 +1,11 @@
 pull_request_rules:
+  - name: backport tentacle
+    conditions:
+      - label=backport-tentacle
+    actions:
+      backport:
+        branches:
+          - tentacle
   - name: backport squid
     conditions:
       - label=backport-squid
