@@ -2,8 +2,8 @@
 ceph_defaults_ceph_origin: community
 ceph_defaults_ceph_dev_branch: main
 ceph_defaults_ceph_dev_sha1: latest
-ceph_defaults_ceph_rhcs_version: 5
-ceph_defaults_ceph_ibm_version: 5
+ceph_defaults_ceph_rhcs_version: 9
+ceph_defaults_ceph_ibm_version: 9
 ceph_defaults_ceph_mirror: https://download.ceph.com
 ceph_defaults_ceph_stable_key: https://download.ceph.com/keys/release.asc
 ceph_defaults_ceph_community_repo_baseurl: >-
