@@ -109,13 +109,23 @@
         - name: Enable repo from shaman - dev
           when: ceph_defaults_ceph_origin == 'shaman'
           block:
+            # Workaround as Shaman publishes EL10 RPMs under rocky10.
+            - name: Set_fact _ceph_shaman_yum_distro
+              ansible.builtin.set_fact:
+                _ceph_shaman_yum_distro: >-
+                  {{
+                    'rocky'
+                    if ansible_facts['distribution_major_version'] | int >= 10
+                    else 'centos'
+                  }}
+
             - name: Fetch ceph development repository
               ansible.builtin.uri:
                 url:
                   "https://shaman.ceph.com/api/repos/ceph/\
                   {{ ceph_defaults_ceph_dev_branch }}/\
                   {{ ceph_defaults_ceph_dev_sha1 }}/\
-                  centos/{{ ansible_facts['distribution_major_version'] }}/\
+                  {{ _ceph_shaman_yum_distro }}/{{ ansible_facts['distribution_major_version'] }}/\
                   repo?arch={{ ansible_facts['architecture'] }}"
                 return_content: true
               register: ceph_dev_yum_repo
