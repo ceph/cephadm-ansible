@@ -7,12 +7,12 @@ ceph_defaults_ceph_ibm_version: 9
 ceph_defaults_ceph_mirror: https://download.ceph.com
 ceph_defaults_ceph_stable_key: https://download.ceph.com/keys/release.asc
 ceph_defaults_ceph_community_repo_baseurl: >-
-  "{{ ceph_defaults_ceph_mirror }}/
-  rpm-{{ ceph_defaults_ceph_release }}/el{{ ansible_facts['distribution_major_version'] }}/"
+  {{ ceph_defaults_ceph_mirror }}/rpm-{{ ceph_defaults_ceph_release
+  }}/el{{ ansible_facts['distribution_major_version'] }}/
 ceph_defaults_ceph_ibm_repo_baseurl: >-
-  https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/
-  {{ ceph_defaults_ceph_ibm_version }}/
-  rhel{{ ansible_facts['distribution_major_version'] }}/
+  https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/{{
+  ceph_defaults_ceph_ibm_version }}/rhel{{
+  ansible_facts['distribution_major_version'] }}/
 ceph_defaults_ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/RPM-GPG-KEY-IBM-CEPH
 ceph_defaults_ceph_release: quincy
 ceph_defaults_upgrade_ceph_packages: false
