@@ -82,7 +82,12 @@
                   name: ceph_stable
                   description: "{{ 'Ceph Stable repo' if ceph_defaults_ceph_origin == 'community' else 'IBM Ceph repo' }}"
                   rpm_key: "{{ ceph_defaults_ceph_stable_key if ceph_defaults_ceph_origin == 'community' else ceph_defaults_ceph_ibm_key }}"
-                  baseurl: "{{ ceph_community_repo_baseurl if ceph_defaults_ceph_origin == 'community' else ceph_defaults_ceph_ibm_repo_baseurl }}"
+                  baseurl: >-
+                    {{
+                       ceph_defaults_ceph_community_repo_baseurl
+                       if ceph_defaults_ceph_origin == 'community'
+                       else ceph_defaults_ceph_ibm_repo_baseurl
+                    }}
                   paths: "{{ ['noarch', '$basearch'] if ceph_defaults_ceph_origin == 'community' else ['$basearch'] }}"
 
             - name: Configure ceph repository key
