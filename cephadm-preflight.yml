@@ -26,6 +26,8 @@
   become: true
   gather_facts: true
   vars:
+    client_group: "{{ ceph_defaults_client_group }}"
+    infra_pkgs: "{{ ceph_defaults_infra_pkgs | default([]) }}"
     repos_4_to_disable:
       - rhceph-4-tools-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
       - rhceph-4-mon-for-rhel-{{ ansible_facts['distribution_major_version'] }}-{{ ansible_facts['architecture'] }}-rpms
