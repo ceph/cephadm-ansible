@@ -198,7 +198,9 @@
       {'Check': 'Root Filesystem >= 100GB', 'Result': filesystem_checks['root_fs']['result'], 'Reason': filesystem_checks['root_fs']['reason']},
       {'Check': 'NIC Configuration', 'Result': 'INFO',
       'Reason': 'Available network interfaces: ' ~ (network_interfaces | default([]) | join(', ')) ~
-              ' | Speeds (Mbps): ' ~ (network_interfaces | default([]) | map('extract', ansible_facts) | map(attribute='speed') | list | join(', '))},
+              ' | Speeds (Mbps): ' ~
+              (network_interfaces | map('replace','-','_') | map('regex_replace','^','ansible_') |
+              map('extract', hostvars[inventory_hostname].ansible_facts) | map(attribute='speed', default='-1') | list | join(', '))},
       {'Check': 'Jumbo Frames Enabled', 'Result': ('PASS' if (primary_mtu | int) > 1500 else 'FAIL'),
       'Reason': ('MTU is ' ~ (primary_mtu | int) ~ ', recommended > 1500' if (primary_mtu | int) <= 1500 else 'N/A')},
       {'Check': 'NIC Static IP Configuration', 'Result': ('PASS' if primary_dhcp == 'manual' else 'FAIL'),
