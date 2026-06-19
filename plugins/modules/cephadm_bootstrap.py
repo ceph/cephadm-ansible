@@ -281,6 +281,7 @@ def main() -> None:
     )
 
     cephadm_bootstrap_downstream_only = dict(
+        automatically_accept_license=dict(type='bool', required=False),
         call_home_config=dict(type='str', required=False),
         call_home_icn=dict(type='str', required=False),
         ceph_call_home_contact_email=dict(type='str', required=False),
@@ -289,6 +290,7 @@ def main() -> None:
         ceph_call_home_contact_phone=dict(type='str', required=False),
         ceph_call_home_country_code=dict(type='str', required=False),
         deploy_cephadm_agent=dict(type='bool', required=False),
+        disable_ibm_call_home=dict(type='bool', required=False),
         enable_ibm_call_home=dict(type='bool', required=False),
         enable_storage_insights=dict(type='bool', required=False),
         storage_insights_config=dict(type='str', required=False),
