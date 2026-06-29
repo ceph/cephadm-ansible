@@ -238,6 +238,7 @@
             enabled: true
 
         - name: Ensure firewalld is enabled and running
+          when: ceph_defaults_preflight_manage_firewall | default(true) | bool
           ansible.builtin.systemd:
             name: firewalld
             state: started

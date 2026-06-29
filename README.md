@@ -189,6 +189,19 @@ Options:
 
 `custom_repo_url`: The url of the repository when `ceph_origin` is 'custom'.
 `custom_repo_gpgkey`: The url of the gpg key corresponding to the repository set in `custom_repo_url` when `ceph_origin` is 'custom'.
+`cephadm_preflight_manage_firewall`: Whether to enable and start firewalld during preflight.\
+**valid values:**
+
+* `true`: Enable and start firewalld on all nodes.
+* `false`: Do not modify firewalld state.
+
+**default**: true
+
+Set to `false` when host firewalls are intentionally disabled and network security is handled externally:
+
+```
+ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "cephadm_preflight_manage_firewall=false"
+```
 
 # Purge
 
