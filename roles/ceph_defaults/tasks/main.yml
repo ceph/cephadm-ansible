@@ -78,3 +78,8 @@
   ansible.builtin.set_fact:
     ceph_defaults_client_group: "{{ client_group }}"
   when: client_group is defined
+
+- name: Backward compatibility for cephadm_preflight_manage_firewall
+  ansible.builtin.set_fact:
+    ceph_defaults_preflight_manage_firewall: "{{ cephadm_preflight_manage_firewall }}"
+  when: cephadm_preflight_manage_firewall is defined

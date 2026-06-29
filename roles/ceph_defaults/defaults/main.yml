@@ -16,6 +16,7 @@ ceph_defaults_ceph_ibm_repo_baseurl: >-
 ceph_defaults_ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/RPM-GPG-KEY-IBM-CEPH
 ceph_defaults_ceph_release: quincy
 ceph_defaults_upgrade_ceph_packages: false
+ceph_defaults_preflight_manage_firewall: true
 ceph_defaults_ceph_pkgs:
   - cephadm
   - ceph-common
