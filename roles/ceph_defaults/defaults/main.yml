@@ -16,6 +16,9 @@ ceph_defaults_ceph_ibm_repo_baseurl: >-
 ceph_defaults_ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/RPM-GPG-KEY-IBM-CEPH
 ceph_defaults_ceph_release: quincy
 ceph_defaults_upgrade_ceph_packages: false
+# Controls whether the preflight playbook enables and starts firewalld.
+# Set to false to skip firewalld management and preserve existing firewall configurations.
+ceph_defaults_configure_firewalld: true
 ceph_defaults_ceph_pkgs:
   - cephadm
   - ceph-common
