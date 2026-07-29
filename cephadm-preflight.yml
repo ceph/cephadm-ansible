@@ -242,8 +242,8 @@
             name: firewalld
             state: started
             enabled: true
-          register: firewall_status
           failed_when: false
+          when: ceph_defaults_configure_firewalld | bool
 
     - name: Ubuntu related tasks
       when: ansible_facts['distribution'] == 'Ubuntu'
