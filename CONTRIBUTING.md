@@ -38,7 +38,9 @@ Merging PR is controlled by [mergify](https://mergify.io/) by the following
 rules:
 
 - at least one approval from a maintainer
-- a SUCCESS from the CI pipeline "cephadm-ansible PR Pipeline"
+- SUCCESS from every Jenkins status reported by the cephadm-ansible PR
+  pipeline (`Testing: flake8`, `Testing: mypy`, `Testing: unittests`,
+  `Testing: el9-functional`, `Testing: el10-functional`)
 
 If your work is not ready for review and merging, request the `DNM` (**D**o
 **N**ot **M**erge) label via a comment or the title of your PR. This will
