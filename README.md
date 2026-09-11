@@ -190,6 +190,26 @@ Options:
 `custom_repo_url`: The url of the repository when `ceph_origin` is 'custom'.
 `custom_repo_gpgkey`: The url of the gpg key corresponding to the repository set in `custom_repo_url` when `ceph_origin` is 'custom'.
 
+`ceph_defaults_configure_firewalld` (alias: `configure_firewalld`): Controls whether the preflight playbook enables and starts firewalld on all nodes.\
+**valid values:**
+
+* `true`: Enable and start firewalld on all nodes. This is the default.
+* `false`: Skip firewalld management entirely, preserving any existing firewall or external security configuration.
+
+**default**: true
+
+**Note**: By default, the preflight playbook enables and starts firewalld. Set this variable to `false` to skip firewalld management in environments where firewalld disruption could isolate Ceph nodes or where an external firewall (e.g., nftables, iptables) is already in place:
+
+```
+ansible-playbook -i <inventory host file> cephadm-preflight.yml --extra-vars "ceph_defaults_configure_firewalld=false"
+```
+
+When disabled, the preflight playbook skips the firewalld enable/start task and omits the Firewalld check from the preflight report entirely.
+
+The `firewalld` package is always installed as part of `ceph_defaults_infra_pkgs` regardless of this setting. Only the service state (enabled/started) is controlled by this variable.
+
+For backward compatibility, you can also use `configure_firewalld=false`, but `ceph_defaults_configure_firewalld` is the preferred variable name.
+
 # Purge
 
 This playbook purges a Ceph cluster managed with cephadm

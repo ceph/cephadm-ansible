@@ -49,13 +49,24 @@
   ansible.builtin.set_fact:
     package_reason: "{{ 'Missing packages: ' ~ (infra_pkgs | difference(ansible_facts.packages.keys()) | join(', ')) if package_check == 'FAIL' else 'N/A' }}"
 
-- name: Fetch Firewalld status
+- name: Initialize firewalld_active_state when firewalld check is skipped
+  ansible.builtin.set_fact:
+    firewalld_active_state: "skipped"
+  when: not (ceph_defaults_configure_firewalld | bool)
+
+- name: Fetch Firewalld active state (read-only)
   ansible.builtin.systemd:
     name: firewalld
-    state: started
-  register: firewall_status
+    daemon_reload: false
+  register: _firewalld_status
   changed_when: false
   failed_when: false
+  when: ceph_defaults_configure_firewalld | bool
+
+- name: Set firewalld_active_state fact
+  ansible.builtin.set_fact:
+    firewalld_active_state: "{{ _firewalld_status.status.ActiveState | default('unknown') }}"
+  when: ceph_defaults_configure_firewalld | bool
 
 - name: Extract Podman version if installed
   ansible.builtin.set_fact:
@@ -178,15 +189,13 @@
       {'Check': 'OS Version', 'Result': os_check, 'Reason': os_reason},
       {'Check': 'Tuned Profile', 'Result': tuned_profile_check, 'Reason': tuned_profile_reason},
       {'Check': 'RHEL Profile', 'Result': rhel_profile_check, 'Reason': rhel_profile_reason},
+    ] + ([
       {'Check': 'Firewalld Running',
-       'Result': ('PASS' if firewall_status.get('status', {}).get('ActiveState', 'unknown') == 'active'
-                  else 'FAIL'),
-       'Reason': ('Firewalld service is missing' if 'msg' in firewall_status
-                  else ('Firewalld is stopped. Start it using systemctl start firewalld'
-                        if firewall_status.get('status', {}).get('ActiveState') == 'inactive'
-                        else ('Firewalld was not running and could not be started'
-                              if firewall_status.get('failed', False)
-                              else 'Unexpected issue, check systemctl status firewalld')))},
+       'Result': ('PASS' if firewalld_active_state == 'active' else 'FAIL'),
+       'Reason': ('Firewalld is stopped. Start it using: systemctl start firewalld'
+                  if firewalld_active_state == 'inactive'
+                  else 'Unable to determine firewalld status, check: systemctl status firewalld')}
+    ] if ceph_defaults_configure_firewalld | bool else []) + [
       {'Check': 'Podman Installed', 'Result': podman_check, 'Reason': podman_reason},
       {'Check': 'SELinux', 'Result': selinux_check, 'Reason': selinux_reason},
       {'Check': 'Required Packages Installed', 'Result': package_check, 'Reason': package_reason},
@@ -215,10 +224,10 @@
       (['Tuned Profile'] if tuned_profile_check == 'FAIL' else []) +
       (['RHEL Profile'] if rhel_profile_check == 'FAIL' else []) +
       (['SELinux'] if selinux_check == 'FAIL' else []) +
-      (['Required Packages'] if package_check == 'FAIL' else preflight_failures) +
-      (['Firewalld Running']
-       if firewall_status.get('status', {}).get('ActiveState') != 'active'
-       else []) +
+      (['Required Packages'] if package_check == 'FAIL' else []) +
+      ((['Firewalld Running']
+        if firewalld_active_state != 'active'
+        else []) if ceph_defaults_configure_firewalld | bool else []) +
       (['Podman Installed'] if podman_check == 'FAIL' else []) +
       (['Minimum RAM'] if memory_checks['ram']['result'] == 'FAIL' else []) +
       (['CPU x86-64-v2'] if cpu_checks['x86_64_v2']['result'] == 'FAIL' else []) +
