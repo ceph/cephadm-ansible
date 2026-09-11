@@ -1,3 +1,16 @@
+queue_rules:
+  - name: default
+    # GitHub branch protection currently injects only github-review-approved.
+    # Require the Jenkins statuses reported by cephadm-ansible-prs so a PR
+    # that is already up-to-date cannot skip CI and merge while jobs are pending.
+    merge_conditions:
+      - 'check-success="Testing: flake8"'
+      - 'check-success="Testing: mypy"'
+      - 'check-success="Testing: unittests"'
+      - 'check-success="Testing: el9-functional"'
+      - 'check-success="Testing: el10-functional"'
+      - label != DNM
+
 pull_request_rules:
   - name: backport squid
     conditions:
