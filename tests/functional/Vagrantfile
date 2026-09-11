@@ -6,7 +6,7 @@
 NNODE           = 6
 NCLIENTS        = 2
 LABEL_PREFIX    = 'ceph-'
-MEMORY          = 1024
+MEMORY          = 2048
 PUBLIC_SUBNET   = '192.168.9'
 CLUSTER_SUBNET  = '192.168.10'
 BOX             = ENV['CEPH_ANSIBLE_VAGRANT_BOX']
