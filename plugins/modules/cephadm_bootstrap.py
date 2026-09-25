@@ -21,7 +21,7 @@ __metaclass__ = type
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module  # type: ignore
+    from ansible_collections.ceph.cephadm.plugins.module_utils.ceph_common import exit_module  # type: ignore
 except ImportError:
     from module_utils.ceph_common import exit_module
 import datetime
