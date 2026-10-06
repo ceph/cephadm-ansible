@@ -23,9 +23,9 @@ import yaml
 
 from ansible.module_utils.basic import AnsibleModule  # type: ignore
 try:
-    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_orch  # type: ignore
+    from ansible.module_utils.ceph_common import exit_module, build_base_cmd_orch, fatal  # type: ignore
 except ImportError:
-    from module_utils.ceph_common import exit_module, build_base_cmd_orch
+    from module_utils.ceph_common import exit_module, build_base_cmd_orch, fatal
 
 
 ANSIBLE_METADATA = {
@@ -71,6 +71,17 @@ EXAMPLES = '''
           all: true
 '''
 
+RETURN = '''
+stdout:
+  description: Empty string (suppressed to prevent secret exposure).
+  type: str
+  returned: always
+stderr:
+  description: Empty string (suppressed to prevent secret exposure).
+  type: str
+  returned: always
+'''
+
 
 def parse_spec(spec: str) -> Dict:
     """ parse spec string to yaml """
@@ -98,9 +109,9 @@ def apply_spec(module: "AnsibleModule",
     rc, out, err = module.run_command(cmd, data=data)
 
     if rc:
-        raise RuntimeError(err)
+        fatal(message="Failed to apply spec.", module=module)
 
-    return rc, cmd, out, err
+    return rc, cmd, '', ''
 
 
 def change_required(current: Dict, expected: Dict) -> bool:
@@ -118,22 +129,7 @@ def change_required(current: Dict, expected: Dict) -> bool:
     return False
 
 
-def run_module() -> None:
-
-    module_args = dict(
-        spec=dict(type='str', required=True),
-        fsid=dict(type='str', required=False),
-        docker=dict(type=bool,
-                    required=False,
-                    default=False),
-        image=dict(type='str', required=False)
-    )
-
-    module = AnsibleModule(
-        argument_spec=module_args,
-        supports_check_mode=True
-    )
-
+def run(module: "AnsibleModule") -> None:
     startd = datetime.datetime.now()
     spec = module.params.get('spec')
 
@@ -164,13 +160,32 @@ def run_module() -> None:
 
     exit_module(
         module=module,
-        out=out,
+        out='',
         rc=rc,
         cmd=cmd,
-        err=err,
+        err='',
         startd=startd,
         changed=changed
     )
+
+
+def run_module() -> None:
+
+    module_args = dict(
+        spec=dict(type='str', required=True, no_log=True),
+        fsid=dict(type='str', required=False),
+        docker=dict(type=bool,
+                    required=False,
+                    default=False),
+        image=dict(type='str', required=False)
+    )
+
+    module = AnsibleModule(
+        argument_spec=module_args,
+        supports_check_mode=True
+    )
+
+    run(module)
 
 
 def main() -> None:
