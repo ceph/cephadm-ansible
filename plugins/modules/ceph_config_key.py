@@ -77,7 +77,11 @@ EXAMPLES = '''
 
 RETURN = '''
 stdout:
-  description: The current value of the config-key after the run (when state is present).
+  description: Empty string (suppressed to prevent secret exposure).
+  type: str
+  returned: always
+stderr:
+  description: Empty string (suppressed to prevent secret exposure).
   type: str
   returned: always
 '''
@@ -107,7 +111,7 @@ def get_config_key_dump(module: "AnsibleModule") -> Tuple[int, List[str], str, s
     cmd.extend(['ceph', 'config-key', 'dump', '--format', 'json'])
     rc, out, err = module.run_command(cmd)
     if rc:
-        fatal(message=f"Can't get current configuration via `ceph config-key dump`.Error:\n{err}", module=module)
+        fatal(message="Can't get current configuration via `ceph config-key dump`.", module=module)
     out = out.strip()
     return rc, cmd, out, err
 
@@ -128,40 +132,34 @@ def run(module: "AnsibleModule") -> None:
     startd = datetime.datetime.now()
     changed = False
     diff = None
-    out = ''
 
-    rc, cmd, dumpout, err = get_config_key_dump(module)
+    rc, cmd, dumpout, _err = get_config_key_dump(module)
     config_dump = json.loads(dumpout)
     current_value = get_config_key_current_value(option, config_dump)
 
     if state == 'present':
-        if value == current_value:
-            out = current_value or ''
-        else:
+        if value != current_value:
             changed = True
-            diff = dict(before=current_value, after=value)
+            # do not expose secret values
+            diff = dict(before='', after='')
             if not module.check_mode:
-                rc, cmd, out, err = set_config_key_value(module, option, value)
+                rc, cmd, _out, _err = set_config_key_value(module, option, value)
                 if rc:
-                    fatal(message=f"Failed to set config-key '{option}'. Error:\n{err}", module=module)
-            else:
-                out = value
+                    fatal(message=f"Failed to set config-key '{option}'.", module=module)
     else:
         # state == 'absent'
-        if current_value is None:
-            out = ''
-        else:
+        if current_value is not None:
             changed = True
-            diff = dict(before=current_value, after='')
+            # do not expose secret values
+            diff = dict(before='', after='')
             if not module.check_mode:
-                rc, cmd, out, err = del_config_key(module, option)
+                rc, cmd, _out, _err = del_config_key(module, option)
                 if rc:
-                    fatal(message=f"Failed to delete config-key '{option}'. Error:\n{err}", module=module)
-            else:
-                out = ''
+                    fatal(message=f"Failed to delete config-key '{option}'.", module=module)
 
-    exit_module(module=module, out=out, rc=rc,
-                cmd=cmd, err=err, startd=startd,
+    # stdout/stderr intentionally blanked — secrets must not appear in task results
+    exit_module(module=module, out='', rc=rc,
+                cmd=cmd, err='', startd=startd,
                 changed=changed, diff=diff)
 
 
@@ -169,7 +167,7 @@ def main() -> None:
     module = AnsibleModule(
         argument_spec=dict(
             option=dict(type='str', required=True),
-            value=dict(type='str', required=False),
+            value=dict(type='str', required=False, no_log=True),
             state=dict(type='str', required=False, choices=['present', 'absent'], default='present'),
             fsid=dict(type='str', required=False),
             image=dict(type='str', required=False)
