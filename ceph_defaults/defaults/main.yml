@@ -11,6 +11,9 @@ ceph_ibm_repo_baseurl: "https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph
 ceph_ibm_key: https://public.dhe.ibm.com/ibmdl/export/pub/storage/ceph/RPM-GPG-KEY-IBM-CEPH
 ceph_release: squid
 upgrade_ceph_packages: false
+# Controls whether the preflight playbook enables and starts firewalld.
+# Set to false to skip firewalld management and preserve existing firewall configurations.
+ceph_defaults_configure_firewalld: true
 ceph_pkgs:
   - cephadm
   - ceph-common
