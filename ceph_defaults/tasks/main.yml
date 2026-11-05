@@ -1,0 +1,5 @@
+---
+- name: Backward compatibility for configure_firewalld
+  ansible.builtin.set_fact:
+    ceph_defaults_configure_firewalld: "{{ configure_firewalld }}"
+  when: configure_firewalld is defined
