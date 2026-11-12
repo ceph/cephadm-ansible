@@ -83,12 +83,24 @@ def retrieve_current_spec(module: AnsibleModule, expected_spec: Dict) -> Dict:
     service: str = expected_spec["service_type"]
     cmd = build_base_cmd_orch(module)
     cmd.extend(['ls', service, '--format=yaml'])
-    out = module.run_command(cmd)
-    if isinstance(out, str):
-        # if there is no existing service, cephadm returns the string 'No services reported'
+    rc, out, _ = module.run_command(cmd)
+    if rc or not out:
         return {}
-    else:
-        return yaml.safe_load(out[1])
+
+    try:
+        # `ceph orch ls` prints one YAML document per service, so a service
+        # type with several specs yields a multi-document stream.
+        specs = [doc for doc in yaml.safe_load_all(out) if isinstance(doc, dict)]
+    except yaml.YAMLError:
+        # e.g. 'No services reported' is not a spec
+        return {}
+
+    # Only compare against the spec that is being applied.
+    for key in ('service_id', 'service_name'):
+        if key in expected_spec:
+            specs = [spec for spec in specs if spec.get(key) == expected_spec[key]]
+
+    return specs[0] if specs else {}
 
 
 def apply_spec(module: "AnsibleModule",
