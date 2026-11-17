@@ -124,6 +124,19 @@ options:
         description:
             - subnet to use for cluster replication, recovery and heartbeats.
         required: false
+    automatically_accept_license:
+        description:
+            - Automatically accept the IBM Storage Ceph license during
+              bootstrap (downstream-only). Maps to
+              C(--automatically-accept-license).
+        required: false
+        type: bool
+    disable_ibm_call_home:
+        description:
+            - Disable IBM Call Home during bootstrap (downstream-only).
+              Maps to C(--disable-ibm-call-home).
+        required: false
+        type: bool
 author:
     - Dimitri Savineau <dsavinea@redhat.com>
     - Teoman ONAY <tonay@ibm.com>
@@ -148,6 +161,12 @@ EXAMPLES = '''
     mon_ip: 192.168.42.1
   environment:
     CEPHADM_IMAGE: quay.ceph.io/ceph/daemon-base:latest-main-devel
+
+- name: bootstrap IBM Ceph with license accept and Call Home disabled
+  cephadm_bootstrap:
+    mon_ip: 192.168.42.1
+    automatically_accept_license: true
+    disable_ibm_call_home: true
 '''
 
 RETURN = '''#  '''
@@ -281,6 +300,7 @@ def main() -> None:
     )
 
     cephadm_bootstrap_downstream_only = dict(
+        automatically_accept_license=dict(type='bool', required=False),
         call_home_config=dict(type='str', required=False),
         call_home_icn=dict(type='str', required=False),
         ceph_call_home_contact_email=dict(type='str', required=False),
@@ -289,6 +309,7 @@ def main() -> None:
         ceph_call_home_contact_phone=dict(type='str', required=False),
         ceph_call_home_country_code=dict(type='str', required=False),
         deploy_cephadm_agent=dict(type='bool', required=False),
+        disable_ibm_call_home=dict(type='bool', required=False),
         enable_ibm_call_home=dict(type='bool', required=False),
         enable_storage_insights=dict(type='bool', required=False),
         storage_insights_config=dict(type='str', required=False),
@@ -357,6 +378,7 @@ def main() -> None:
             ('registry_json', 'registry_username'),
             ('registry_json', 'registry_password'),
             ('mon_addrv', 'mon_ip'),
+            ('enable_ibm_call_home', 'disable_ibm_call_home'),
         ],
         required_together=[
             ('registry_url', 'registry_username', 'registry_password'),
