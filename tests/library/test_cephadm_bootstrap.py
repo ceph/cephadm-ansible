@@ -129,3 +129,35 @@ class TestCephadmBootstrapModule:
         assert res['rc'] == 0
         assert res['stdout'] == 'Bootstrap complete.'
         assert res['stderr'] == ''
+
+    @patch('ansible.module_utils.basic.AnsibleModule.run_command')
+    def test_with_license_and_disable_call_home(self, m_run_command):
+        module = MagicMock()
+        module.params = {
+            'mon_ip': fake_ip,
+            'automatically_accept_license': True,
+            'disable_ibm_call_home': True,
+        }
+        module.check_mode = False
+        module.exit_json.side_effect = common.exit_json
+        module.run_command = m_run_command
+        m_run_command.return_value = (0, 'Bootstrap complete.', '')
+
+        cephadm_params = {}
+        cephadm_bootstrap_params = {
+            'mon_ip': {'type': 'str'},
+            'automatically_accept_license': {'type': 'bool'},
+            'disable_ibm_call_home': {'type': 'bool'},
+        }
+        backward_compat = {}
+
+        with pytest.raises(common.AnsibleExitJson) as result:
+            cephadm_bootstrap.run(module, cephadm_params,
+                                  cephadm_bootstrap_params, backward_compat)
+
+        res = result.value.args[0]
+        assert res['changed']
+        assert '--mon-ip' in res['cmd']
+        assert '--automatically-accept-license' in res['cmd']
+        assert '--disable-ibm-call-home' in res['cmd']
+        assert res['rc'] == 0
